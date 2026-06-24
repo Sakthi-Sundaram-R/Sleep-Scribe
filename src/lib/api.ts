@@ -72,12 +72,20 @@ export const api = {
     date: string;
     quality: number;
     hours: number;
-    analysis: DreamAnalysis;
+    analysis?: DreamAnalysis; // optional — server generates it with the LLM
   }) =>
     request<{ entry: ApiEntry }>("/entries", {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  analyzeDream: (text: string) =>
+    request<{ analysis: DreamAnalysis; source: string }>("/ai/analyze", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }),
+
+  aiStatus: () => request<{ aiEnabled: boolean; model: string }>("/ai/status"),
 
   deleteEntry: (id: string) =>
     request<{ ok: true }>(`/entries/${id}`, { method: "DELETE" }),

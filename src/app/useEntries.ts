@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { analyzeDream } from "../lib/dreamEngine";
 import { api, type ApiEntry } from "../lib/api";
 
 export type Entry = ApiEntry;
@@ -45,6 +44,7 @@ export function useEntries() {
 
   const add = useCallback(async (text: string) => {
     const now = Date.now();
+    // No analysis sent — the backend runs the real LLM (Groq) to produce it.
     const payload = {
       text: text.trim(),
       date: new Date(now).toLocaleDateString(undefined, {
@@ -53,7 +53,6 @@ export function useEntries() {
       }),
       quality: 60 + Math.round(Math.random() * 35),
       hours: +(6 + Math.random() * 2.5).toFixed(1),
-      analysis: analyzeDream(text),
     };
     const { entry } = await api.addEntry(payload);
     cache = [entry, ...cache];

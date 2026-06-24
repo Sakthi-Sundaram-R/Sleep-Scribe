@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { Entry } from "../models/Entry.js";
 import { requireAuth } from "../middleware/auth.js";
+import { analyzeDream } from "../ai/groq.js";
 
 const router = Router();
 
@@ -20,13 +21,21 @@ router.post("/", async (req, res) => {
     if (!text || !text.trim()) {
       return res.status(400).json({ error: "Entry text is required" });
     }
+
+    // If the client didn't provide analysis, generate it with the LLM (Day 3).
+    let finalAnalysis = analysis;
+    if (!finalAnalysis) {
+      const result = await analyzeDream(text);
+      finalAnalysis = result.analysis;
+    }
+
     const entry = await Entry.create({
       userId: req.userId,
       text: text.trim(),
       date,
       quality,
       hours,
-      analysis,
+      analysis: finalAnalysis,
     });
     res.status(201).json({ entry });
   } catch (err) {

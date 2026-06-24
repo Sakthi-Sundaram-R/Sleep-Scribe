@@ -82,7 +82,7 @@ drives a good or bad night. Generic trackers show charts but no *meaning*.
 | **Backend** | **Node + Express** API (`/server`) |
 | **Database** | **MongoDB** via **Mongoose** (Atlas in prod; in-memory for local dev) |
 | **Auth** | **JWT** + **bcrypt** (email/password) |
-| AI engine | Local heuristic `dreamEngine` today → **LLM-powered (Claude) on Day 3** |
+| **AI** | **Groq** (`groq-sdk`, `llama-3.3-70b-versatile`) with an offline heuristic fallback |
 
 ---
 
@@ -202,36 +202,34 @@ ember of a dream glowing in the dark.
 
 ---
 
-## 🤖 Wiring in real AI (Day 3)
+## 🤖 The AI (Day 3) — real LLM call via Groq
 
-Today `src/lib/dreamEngine.ts` ships a fully **offline** analysis engine so the demo
-works with zero setup. To use a real LLM, replace `analyzeDream()` with an API call
-— the UI already expects the same `DreamAnalysis` shape, so nothing else changes.
+Dream analysis is powered by a **real LLM call to [Groq](https://groq.com)** running
+on the backend (`server/src/ai/groq.js`). The key is read from
+`process.env.GROQ_API_KEY` — **never hard-coded and never sent to the browser**.
 
-```ts
-// src/lib/dreamEngine.ts (Day 3 version)
-import Anthropic from "@anthropic-ai/sdk";
+**How it flows, end to end:**
 
-export async function analyzeDream(text: string): Promise<DreamAnalysis> {
-  // ⚠️ In production, call this from a backend so your API key stays secret.
-  const client = new Anthropic({ apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY });
-  const msg = await client.messages.create({
-    model: import.meta.env.VITE_AI_MODEL ?? "claude-opus-4-8",
-    max_tokens: 800,
-    messages: [
-      {
-        role: "user",
-        content: `Analyze this dream and reply ONLY as JSON matching
-          {summary, mood:{label,score,color}, symbols:[{name,meaning}], themes:[], tip}.
-          Dream: """${text}"""`,
-      },
-    ],
-  });
-  return JSON.parse(msg.content[0].text);
-}
+```
+Journal page → POST /api/entries (text)
+            → server analyzeDream(text)  ──Groq SDK──►  llama-3.3-70b-versatile
+            → JSON { summary, mood, symbols, themes, tip }
+            → saved to MongoDB → shown in the UI
 ```
 
-Then add your key to `.env` (see [`.env.example`](.env.example)).
+There's also a dedicated call site at **`POST /api/ai/analyze`** (`{ text }` →
+`{ analysis, source }`) and a **`GET /api/ai/status`** health check.
+
+**To enable it:** get a free key at [console.groq.com](https://console.groq.com)
+(starts with `gsk_`) and add it to `server/.env`:
+
+```bash
+GROQ_API_KEY=gsk_your_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+```
+
+> If no key is set, the server automatically falls back to an **offline heuristic
+> analyzer** (`server/src/ai/heuristic.js`) so the app always works.
 
 ---
 
@@ -239,7 +237,7 @@ Then add your key to `.env` (see [`.env.example`](.env.example)).
 
 - [x] **Day 1 — Spec & foundation:** repo, README spec & a runnable app skeleton ✅
 - [x] **Day 2 — Core app:** real email/password auth + per-user journal saved to MongoDB ✅
-- [ ] **Day 3 — Wire in the AI:** first real LLM call (Claude) for dream analysis
+- [x] **Day 3 — Wire in the AI:** real Groq LLM call analyzes dreams, end to end ✅
 - [ ] **Day 4 — Signature feature:** the app's flagship AI feature on real input
 - [ ] **Day 5 — Polish & ship:** deployed app + guardrails + a share post
 

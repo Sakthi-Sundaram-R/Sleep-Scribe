@@ -4,6 +4,7 @@ import cors from "cors";
 import { connectDB } from "./db.js";
 import authRoutes from "./routes/auth.js";
 import entryRoutes from "./routes/entries.js";
+import aiRoutes from "./routes/ai.js";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get("/api/health", (_req, res) => res.json({ ok: true, service: "sleep-scrib
 
 app.use("/api/auth", authRoutes);
 app.use("/api/entries", entryRoutes);
+app.use("/api/ai", aiRoutes);
 
 // 404 + error fallback
 app.use((_req, res) => res.status(404).json({ error: "Not found" }));
