@@ -175,10 +175,10 @@ export default function Onboarding() {
                 </div>
 
                 <button
-                  onClick={() => navigate("/app")}
+                  onClick={() => navigate("/login")}
                   className="btn-aurora mt-7 w-full"
                 >
-                  Enter my dashboard <ArrowRight className="h-4 w-4" />
+                  Create my account <ArrowRight className="h-4 w-4" />
                 </button>
               </motion.div>
             )}

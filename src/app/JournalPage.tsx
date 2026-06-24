@@ -13,15 +13,21 @@ export default function JournalPage() {
     if (!active && entries.length) setActive(entries[0]);
   }, [entries, active]);
 
-  const save = () => {
+  const [err, setErr] = useState("");
+
+  const save = async () => {
     if (!text.trim()) return;
+    setErr("");
     setLoading(true);
-    setTimeout(() => {
-      const e = add(text);
+    try {
+      const e = await add(text);
       setActive(e);
       setText("");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not save entry");
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -63,6 +69,11 @@ export default function JournalPage() {
                 </>
               )}
             </button>
+            {err && (
+              <p className="mt-3 rounded-xl border border-aurora-pink/30 bg-aurora-pink/10 px-3 py-2 text-sm text-aurora-pink">
+                {err}
+              </p>
+            )}
           </div>
 
           <div className="glass rounded-3xl p-6">

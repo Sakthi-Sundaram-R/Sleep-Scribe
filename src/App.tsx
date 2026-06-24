@@ -1,4 +1,6 @@
 import { Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./auth/AuthContext";
+import RequireAuth from "./auth/RequireAuth";
 import AuroraBackground from "./components/fx/AuroraBackground";
 import StarBackground from "./components/StarBackground";
 import CursorGlow from "./components/fx/CursorGlow";
@@ -7,6 +9,7 @@ import GrainOverlay from "./components/fx/GrainOverlay";
 import SmoothScroll from "./components/fx/SmoothScroll";
 import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
+import Login from "./pages/Login";
 import AppLayout from "./app/AppLayout";
 import DashboardHome from "./app/DashboardHome";
 import JournalPage from "./app/JournalPage";
@@ -15,22 +18,32 @@ import SettingsPage from "./app/SettingsPage";
 
 export default function App() {
   return (
-    <SmoothScroll>
-      <AuroraBackground />
-      <StarBackground />
-      <CursorGlow />
-      <GrainOverlay />
-      <ScrollProgress />
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/app" element={<AppLayout />}>
-          <Route index element={<DashboardHome />} />
-          <Route path="journal" element={<JournalPage />} />
-          <Route path="insights" element={<InsightsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
-      </Routes>
-    </SmoothScroll>
+    <AuthProvider>
+      <SmoothScroll>
+        <AuroraBackground />
+        <StarBackground />
+        <CursorGlow />
+        <GrainOverlay />
+        <ScrollProgress />
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/app"
+            element={
+              <RequireAuth>
+                <AppLayout />
+              </RequireAuth>
+            }
+          >
+            <Route index element={<DashboardHome />} />
+            <Route path="journal" element={<JournalPage />} />
+            <Route path="insights" element={<InsightsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
+        </Routes>
+      </SmoothScroll>
+    </AuthProvider>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Moon,
@@ -10,7 +10,10 @@ import {
   Sparkles,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "../auth/AuthContext";
+import { clearEntriesCache } from "./useEntries";
 
 const nav = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -58,6 +61,21 @@ function SidebarLinks({ onNavigate }: { onNavigate?: () => void }) {
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    clearEntriesCache();
+    navigate("/login", { replace: true });
+  };
+
+  const initials = (user?.name || "U")
+    .split(" ")
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[268px_1fr]">
@@ -74,7 +92,7 @@ export default function AppLayout() {
 
         <SidebarLinks />
 
-        <div className="mt-auto">
+        <div className="mt-auto space-y-3">
           <div className="glass rounded-2xl p-4">
             <div className="flex items-center gap-2 text-aurora-cyan">
               <Sparkles className="h-4 w-4" />
@@ -85,6 +103,23 @@ export default function AppLayout() {
             <p className="mt-1.5 text-xs text-white/55">
               Unlimited AI analysis & soundscapes unlocked.
             </p>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-aurora-gradient text-xs font-bold">
+              {initials}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{user?.name}</p>
+              <p className="truncate text-xs text-white/45">{user?.email}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              title="Log out"
+              className="shrink-0 rounded-lg p-2 text-white/40 transition hover:bg-white/10 hover:text-aurora-pink"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </aside>

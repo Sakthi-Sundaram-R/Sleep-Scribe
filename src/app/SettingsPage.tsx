@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Bell, Moon, Shield, Trash2, Download } from "lucide-react";
-import { useEntries } from "./useEntries";
+import { User, Bell, Moon, Shield, Trash2, Download, LogOut } from "lucide-react";
+import { useEntries, clearEntriesCache } from "./useEntries";
+import { useAuth } from "../auth/AuthContext";
 
 function Toggle({
   on,
@@ -29,7 +31,9 @@ function Toggle({
 }
 
 export default function SettingsPage() {
-  const { entries } = useEntries();
+  const { entries, remove } = useEntries();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [toggles, setToggles] = useState({
     reminders: true,
     soundscapes: true,
@@ -52,11 +56,16 @@ export default function SettingsPage() {
     URL.revokeObjectURL(url);
   };
 
-  const clearAll = () => {
+  const clearAll = async () => {
     if (confirm("Delete all journal entries? This cannot be undone.")) {
-      localStorage.removeItem("sleep-scribe-entries");
-      location.reload();
+      await Promise.all(entries.map((e) => remove(e.id)));
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    clearEntriesCache();
+    navigate("/login", { replace: true });
   };
 
   const prefs = [
@@ -75,14 +84,17 @@ export default function SettingsPage() {
 
       {/* Profile */}
       <div className="glass rounded-3xl p-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="grid h-16 w-16 place-items-center rounded-2xl bg-aurora-gradient text-2xl font-bold">
-            SS
+            {(user?.name || "U").slice(0, 2).toUpperCase()}
           </div>
-          <div>
-            <h2 className="font-display text-lg font-semibold">Sleep Scriber</h2>
-            <p className="text-sm text-white/50">dreamer@sleepscribe.app · Lucid plan</p>
+          <div className="min-w-0 flex-1">
+            <h2 className="font-display text-lg font-semibold">{user?.name}</h2>
+            <p className="truncate text-sm text-white/50">{user?.email} · Lucid plan</p>
           </div>
+          <button onClick={handleLogout} className="btn-ghost text-sm">
+            <LogOut className="h-4 w-4" /> Log out
+          </button>
         </div>
       </div>
 

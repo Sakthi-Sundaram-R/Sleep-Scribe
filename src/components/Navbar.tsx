@@ -57,7 +57,7 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link to="/app" className="btn-ghost px-5 py-2.5 text-sm">
+          <Link to="/login" className="btn-ghost px-5 py-2.5 text-sm">
             Log in
           </Link>
           <Link to="/onboarding" className="btn-aurora px-5 py-2.5 text-sm">

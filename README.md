@@ -79,6 +79,9 @@ drives a good or bad night. Generic trackers show charts but no *meaning*.
 | Smooth scroll | **Lenis** |
 | Icons | **lucide-react** |
 | Routing | **react-router-dom** |
+| **Backend** | **Node + Express** API (`/server`) |
+| **Database** | **MongoDB** via **Mongoose** (Atlas in prod; in-memory for local dev) |
+| **Auth** | **JWT** + **bcrypt** (email/password) |
 | AI engine | Local heuristic `dreamEngine` today → **LLM-powered (Claude) on Day 3** |
 
 ---
@@ -87,24 +90,39 @@ drives a good or bad night. Generic trackers show charts but no *meaning*.
 
 **Prerequisites:** [Node.js](https://nodejs.org) **18+** (built on Node 22) and npm.
 
+Sleep-Scribe is a two-part app: a **frontend** (this folder) and a **backend API**
+(`/server`). Run both in separate terminals.
+
+**1 — Backend (API + database)**
+
 ```bash
-# 1. Install dependencies
+cd server
 npm install
-
-# 2. Start the dev server (opens http://localhost:5173)
-npm run dev
-
-# 3. Build for production
-npm run build
-
-# 4. Preview the production build
-npm run preview
+cp .env.example .env     # optional — works with zero config for local dev
+npm run dev              # API on http://localhost:4000
 ```
 
-> 💡 The app runs **fully offline** today — dream analysis uses a local heuristic
-> engine (`src/lib/dreamEngine.ts`) and journal data is saved to `localStorage`.
-> No API keys required yet. See [`.env.example`](.env.example) for the keys the
-> Day-3 LLM integration will use.
+> 💡 With no `MONGODB_URI` set, the server boots an **in-memory MongoDB** so you can
+> develop instantly. For real, persistent, deployable data, create a free
+> [MongoDB Atlas](https://www.mongodb.com/atlas) cluster and paste its connection
+> string into `server/.env`.
+
+**2 — Frontend**
+
+```bash
+# from the project root
+npm install
+npm run dev              # app on http://localhost:5173
+```
+
+```bash
+npm run build            # production build
+npm run preview          # preview the production build
+```
+
+> The frontend talks to the API at `VITE_API_URL` (defaults to
+> `http://localhost:4000/api`). Dream analysis currently uses a local heuristic
+> engine (`src/lib/dreamEngine.ts`); the Day-3 LLM swap is described below.
 
 ---
 
@@ -152,7 +170,17 @@ sleep-scribe/
 │  │  ├─ formations.ts     # particle formation math (point→galaxy→ring)
 │  │  └─ dreamEngine.ts    # dream analysis (heuristic → LLM on Day 3)
 │  │
+│  ├─ auth/                # AuthContext, RequireAuth guard
+│  ├─ lib/api.ts           # typed client for the backend API
 │  └─ data/content.tsx     # marketing copy & feature data
+│
+├─ server/                 # backend API (Node + Express + MongoDB)
+│  └─ src/
+│     ├─ index.js          # express app + bootstrap
+│     ├─ db.js             # MongoDB connection (Atlas or in-memory)
+│     ├─ models/           # User, Entry (Mongoose schemas)
+│     ├─ middleware/auth.js# JWT verification
+│     └─ routes/           # /auth (register/login/me), /entries (CRUD)
 └─ ...config (vite, tailwind, tsconfig)
 ```
 
@@ -210,7 +238,7 @@ Then add your key to `.env` (see [`.env.example`](.env.example)).
 ## 🗺️ Roadmap — 5-day *Learn · Build · Ship*
 
 - [x] **Day 1 — Spec & foundation:** repo, README spec & a runnable app skeleton ✅
-- [ ] **Day 2 — Core app:** auth + first working data feature, deployed
+- [x] **Day 2 — Core app:** real email/password auth + per-user journal saved to MongoDB ✅
 - [ ] **Day 3 — Wire in the AI:** first real LLM call (Claude) for dream analysis
 - [ ] **Day 4 — Signature feature:** the app's flagship AI feature on real input
 - [ ] **Day 5 — Polish & ship:** deployed app + guardrails + a share post
