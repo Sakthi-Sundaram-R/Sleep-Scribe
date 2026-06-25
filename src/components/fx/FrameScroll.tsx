@@ -12,7 +12,7 @@ import { prefersReducedMotion } from "../3d/util";
 // buttery-smooth cinematic intro.
 // ---------------------------------------------------------------------------
 
-const FRAME_COUNT = 261;
+const FRAME_COUNT = 131;
 const framePath = (i: number) =>
   `/frames/frame-${String(i + 1).padStart(3, "0")}.webp`;
 
@@ -74,7 +74,9 @@ export default function FrameScroll() {
   const resize = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Cap DPR at 1.5 — a smaller canvas buffer means cheaper per-frame draws
+    // (less jank on hi-dpi screens) with no visible loss at this scale.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const rect = canvas.getBoundingClientRect();
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
@@ -82,29 +84,39 @@ export default function FrameScroll() {
     draw(Math.round(currentFrame.current));
   };
 
-  // ---- Preload every frame. ----
+  // ---- Preload AND fully decode every frame. ----
+  // Decoding up front (img.decode()) is the key to smooth scrubbing: it means
+  // the first time we drawImage() a frame during a scroll, the bitmap is already
+  // GPU-ready — no synchronous decode stutter mid-scroll.
   useEffect(() => {
     let cancelled = false;
     let count = 0;
     const imgs: HTMLImageElement[] = new Array(FRAME_COUNT);
 
+    const markLoaded = (i: number) => {
+      if (cancelled) return;
+      count++;
+      setLoaded(count);
+      if (i === 0) {
+        requestAnimationFrame(() => {
+          resize();
+          draw(0);
+        });
+      }
+      if (count === FRAME_COUNT) setReady(true);
+    };
+
     for (let i = 0; i < FRAME_COUNT; i++) {
       const img = new Image();
       img.decoding = "async";
       img.src = framePath(i);
-      img.onload = img.onerror = () => {
-        if (cancelled) return;
-        count++;
-        setLoaded(count);
-        // First frame in: paint it immediately so there's never a blank canvas.
-        if (i === 0) {
-          requestAnimationFrame(() => {
-            resize();
-            draw(0);
-          });
-        }
-        if (count === FRAME_COUNT) setReady(true);
-      };
+      // Prefer decode() (resolves once pixels are decoded); fall back to onload.
+      img
+        .decode()
+        .then(() => markLoaded(i))
+        .catch(() => {
+          img.onload = img.onerror = () => markLoaded(i);
+        });
       imgs[i] = img;
     }
     imagesRef.current = imgs;
