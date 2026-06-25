@@ -92,6 +92,13 @@ export const api = {
       body: JSON.stringify({ text }),
     }),
 
+  // Public, rate-limited demo analysis (no login) for the homepage widget.
+  analyzeDemo: (text: string) =>
+    request<{ analysis: DreamAnalysis; source: string }>("/ai/demo", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }),
+
   aiStatus: () => request<{ aiEnabled: boolean; model: string }>("/ai/status"),
 
   deleteEntry: (id: string) =>

@@ -6,6 +6,7 @@ import {
   EXAMPLE_DREAMS,
   type DreamAnalysis,
 } from "../lib/dreamEngine";
+import { api } from "../lib/api";
 import Reveal from "./Reveal";
 import SplitText from "./fx/SplitText";
 
@@ -14,15 +15,21 @@ export default function DreamAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DreamAnalysis | null>(null);
 
-  const run = () => {
+  const run = async () => {
     if (!text.trim()) return;
     setLoading(true);
     setResult(null);
-    // Simulated "thinking" delay — swap this block for a real LLM call later.
-    setTimeout(() => {
+    try {
+      // Real AI: hit the public, rate-limited Groq demo endpoint.
+      const { analysis } = await api.analyzeDemo(text);
+      setResult(analysis);
+    } catch {
+      // Network error / rate-limited / no key configured → fall back to the
+      // offline engine so the demo always returns something.
       setResult(analyzeDream(text));
+    } finally {
       setLoading(false);
-    }, 1400);
+    }
   };
 
   return (
