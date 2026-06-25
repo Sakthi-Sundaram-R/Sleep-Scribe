@@ -257,19 +257,14 @@ export default function SpotlightHero() {
           </p>
         </div>
 
-        {/* 5 — bottom-right block */}
+        {/* 5 — Start dreaming CTA near nav */}
         <div
-          className="hero-anim hero-fade absolute bottom-10 sm:bottom-24 left-5 right-5 sm:left-auto sm:right-10 md:right-14 z-50 max-w-full sm:max-w-[280px] flex flex-col items-start gap-4 sm:gap-5"
+          className="hero-anim hero-fade absolute top-5 sm:top-6 right-32 sm:right-40 z-[100] flex items-center"
           style={{ animationDelay: "0.85s" }}
         >
-          <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
-            Move your cursor to peer past the surface of sleep and glimpse the
-            dream beneath. SleepScribe helps you capture and decode it each
-            morning.
-          </p>
           <Link
             to="/onboarding"
-            className="bg-aurora-gradient text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-aurora-purple/40"
+            className="bg-aurora-gradient text-white text-sm font-medium px-7 py-2.5 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-aurora-purple/40"
           >
             Start dreaming
           </Link>
