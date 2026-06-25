@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Moon, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Logo from "./Logo";
 
 const links = [
   { label: "Features", href: "#features" },
@@ -35,13 +36,8 @@ export default function Navbar() {
         }`}
         style={scrolled ? { maxWidth: "72rem" } : undefined}
       >
-        <Link to="/" className="flex items-center gap-2.5">
-          <span className="relative grid h-10 w-10 place-items-center rounded-xl bg-aurora-gradient shadow-lg shadow-aurora-purple/40">
-            <Moon className="h-5 w-5 text-white" />
-          </span>
-          <span className="font-display text-xl font-bold tracking-tight">
-            Sleep<span className="text-gradient">Scribe</span>
-          </span>
+        <Link to="/" className="flex items-center">
+          <Logo />
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">

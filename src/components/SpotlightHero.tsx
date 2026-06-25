@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Moon, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import Logo from "./Logo";
 
 // ---------------------------------------------------------------------------
 // SpotlightHero — a cursor-following spotlight that reveals a second image
@@ -114,13 +115,8 @@ function HeroNav() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between p-4 sm:p-5">
       {/* Brand */}
-      <Link to="/" className="flex items-center gap-2.5">
-        <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-aurora-gradient shadow-lg shadow-aurora-purple/40">
-          <Moon className="h-5 w-5 text-white" />
-        </span>
-        <span className="font-display text-2xl font-bold tracking-tight text-white">
-          Sleep<span className="text-gradient">Scribe</span>
-        </span>
+      <Link to="/" className="flex items-center">
+        <Logo textClass="text-2xl" />
       </Link>
 
       {/* Center pill */}
