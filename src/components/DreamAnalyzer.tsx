@@ -223,6 +223,11 @@ export default function DreamAnalyzer() {
             </div>
           </Reveal>
         </div>
+
+        <p className="mx-auto mt-10 max-w-xl text-center text-xs leading-relaxed text-white/35">
+          Dream analysis is offered for personal reflection and journaling — it
+          is not medical, psychological, or diagnostic advice.
+        </p>
       </div>
     </section>
   );
