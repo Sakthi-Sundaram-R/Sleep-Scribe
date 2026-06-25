@@ -1,5 +1,4 @@
-import Navbar from "../components/Navbar";
-import FrameScroll from "../components/fx/FrameScroll";
+import SpotlightHero from "../components/SpotlightHero";
 import Marquee from "../components/fx/Marquee";
 import Features from "../components/Features";
 import HowItWorks from "../components/HowItWorks";
@@ -13,9 +12,8 @@ import Footer from "../components/Footer";
 export default function Landing() {
   return (
     <>
-      <Navbar />
       <main>
-        <FrameScroll />
+        <SpotlightHero />
         <Marquee />
         <Features />
         <HowItWorks />
