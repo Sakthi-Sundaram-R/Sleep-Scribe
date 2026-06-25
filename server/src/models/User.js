@@ -10,7 +10,10 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    passwordHash: { type: String, required: true },
+    // Optional: Google-only accounts have no password.
+    passwordHash: { type: String },
+    googleId: { type: String, index: true, sparse: true },
+    avatar: { type: String },
   },
   { timestamps: true }
 );
@@ -21,6 +24,7 @@ userSchema.methods.toJSON = function () {
     id: this._id,
     name: this.name,
     email: this.email,
+    avatar: this.avatar,
     createdAt: this.createdAt,
   };
 };

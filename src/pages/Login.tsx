@@ -3,9 +3,10 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Mail, Lock, User, Loader2, ArrowRight, Sparkles } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import GoogleButton, { googleConfigured } from "../auth/GoogleButton";
 
 export default function Login() {
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation() as { state?: { from?: string } };
   const dest = location.state?.from || "/app";
@@ -16,6 +17,19 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleGoogle = async (credential: string) => {
+    setError("");
+    setLoading(true);
+    try {
+      await loginWithGoogle(credential);
+      navigate(dest, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +97,18 @@ export default function Login() {
               : "Log in to continue decoding your nights."}
           </p>
 
-          <form onSubmit={submit} className="mt-6 space-y-4">
+          {googleConfigured && (
+            <div className="mt-6">
+              <GoogleButton onCredential={handleGoogle} onError={setError} />
+              <div className="my-5 flex items-center gap-3 text-xs text-white/40">
+                <span className="h-px flex-1 bg-white/10" />
+                or {mode === "signup" ? "sign up" : "log in"} with email
+                <span className="h-px flex-1 bg-white/10" />
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={submit} className={googleConfigured ? "space-y-4" : "mt-6 space-y-4"}>
             <AnimatePresence mode="popLayout">
               {mode === "signup" && (
                 <motion.div

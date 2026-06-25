@@ -19,6 +19,7 @@ export type ApiUser = {
   id: string;
   name: string;
   email: string;
+  avatar?: string;
   createdAt: string;
 };
 
@@ -61,6 +62,12 @@ export const api = {
     request<{ token: string; user: ApiUser }>("/auth/login", {
       method: "POST",
       body: JSON.stringify(body),
+    }),
+
+  googleLogin: (credential: string) =>
+    request<{ token: string; user: ApiUser }>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential }),
     }),
 
   me: () => request<{ user: ApiUser }>("/auth/me"),
