@@ -67,29 +67,6 @@ body {
     animation: gradient-x 6s ease infinite;
   }
 
-  /* Warm gradient text — sunset rose & amber */
-  .text-gradient-warm {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(
-      90deg,
-      #fda4af,
-      #fb7185,
-      #f59e0b,
-      #fcd9b6,
-      #fda4af
-    );
-    background-size: 300% 100%;
-    animation: gradient-x 6s ease infinite;
-  }
-
-  /* Warm glass card — rose-tinted, for the sunset section */
-  .glass-warm {
-    background: rgba(26, 16, 18, 0.55);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(251, 113, 133, 0.16);
-  }
-
   /* Glass card */
   .glass {
     background: rgba(19, 25, 54, 0.55);
