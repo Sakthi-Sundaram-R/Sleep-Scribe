@@ -10,8 +10,8 @@ import { Moon, Menu, X } from "lucide-react";
 // Move the cursor to "peel back" sleep and glimpse the dream underneath.
 // ---------------------------------------------------------------------------
 
-const BASE_IMAGE = "/frames/frame-001.webp"; // sleeping reality
-const REVEAL_IMAGE = "/frames/frame-085.webp"; // the dream beneath
+const BASE_IMAGE = "/hero/sleep.webp"; // sleeping reality
+const REVEAL_IMAGE = "/hero/dream.webp"; // the dream beneath
 const SPOTLIGHT_R = 260;
 
 const serif = "'Cormorant Garamond', Georgia, serif";
