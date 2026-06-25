@@ -12,7 +12,7 @@ import { Moon, Menu, X } from "lucide-react";
 
 const BASE_IMAGE = "/hero/sleep.webp"; // sleeping reality
 const REVEAL_IMAGE = "/hero/dream.webp"; // the dream beneath
-const SPOTLIGHT_R = 420;
+const SPOTLIGHT_R = 340;
 
 const serif = "'Cormorant Garamond', Georgia, serif";
 
