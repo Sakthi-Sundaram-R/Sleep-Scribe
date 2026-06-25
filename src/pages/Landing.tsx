@@ -1,5 +1,5 @@
 import Navbar from "../components/Navbar";
-import CinematicHero from "../components/hero/CinematicHero";
+import FrameScroll from "../components/fx/FrameScroll";
 import Marquee from "../components/fx/Marquee";
 import Features from "../components/Features";
 import HowItWorks from "../components/HowItWorks";
@@ -15,7 +15,7 @@ export default function Landing() {
     <>
       <Navbar />
       <main>
-        <CinematicHero />
+        <FrameScroll />
         <Marquee />
         <Features />
         <HowItWorks />

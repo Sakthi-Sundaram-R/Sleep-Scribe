@@ -60,16 +60,16 @@ const fragmentShader = /* glsl */ `
     float n2 = fbm(p * 1.6 - vec2(t * 0.8, t) - m);
     float n3 = fbm(p * 3.6 + vec2(-t * 0.5, t * 0.9));
 
-    // Ember & Azure palette
-    vec3 night  = vec3(0.012, 0.016, 0.045);
-    vec3 indigo = vec3(0.30, 0.24, 0.95);
-    vec3 ember  = vec3(1.00, 0.45, 0.10);
-    vec3 azure  = vec3(0.18, 0.58, 1.00);
+    // Night Indigo & Dream Violet — calming, sleep-appropriate ambient palette
+    vec3 night  = vec3(0.043, 0.055, 0.122);
+    vec3 indigo = vec3(0.263, 0.220, 0.792);
+    vec3 violet = vec3(0.486, 0.227, 0.929);
+    vec3 azure  = vec3(0.220, 0.741, 0.973);
 
     vec3 col = night;
     col = mix(col, indigo, smoothstep(0.05, 0.75, n) * 0.45);
-    col = mix(col, ember,  smoothstep(0.35, 0.98, n2) * 0.38);
-    col = mix(col, azure,  smoothstep(0.55, 1.05, n * n3) * 0.32);
+    col = mix(col, violet, smoothstep(0.35, 0.98, n2) * 0.35);
+    col = mix(col, azure,  smoothstep(0.55, 1.05, n * n3) * 0.28);
 
     // soft top glow + bottom fade
     col += indigo * smoothstep(0.2, 1.0, uv.y) * 0.06;

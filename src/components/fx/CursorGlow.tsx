@@ -27,7 +27,7 @@ export default function CursorGlow() {
         className="h-full w-full rounded-full opacity-[0.18]"
         style={{
           background:
-            "radial-gradient(circle, rgba(255,138,40,0.85) 0%, rgba(59,130,246,0.5) 38%, transparent 70%)",
+            "radial-gradient(circle, rgba(124,58,237,0.85) 0%, rgba(56,189,248,0.5) 38%, transparent 70%)",
           mixBlendMode: "screen",
           filter: "blur(20px)",
         }}

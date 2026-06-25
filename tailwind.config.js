@@ -5,18 +5,20 @@ export default {
     extend: {
       colors: {
         night: {
-          950: "#04050d",
-          900: "#080a16",
-          800: "#0f1226",
-          700: "#171a3a",
+          950: "#0b0f1f",
+          900: "#0f172a",
+          800: "#131936",
+          700: "#1e2350",
         },
-        // "Ember & Azure" — warm orange <-> electric blue, indigo bridge.
-        // (Token names kept for stability; values retuned to the new theme.)
+        // "Night Indigo & Dream Violet" — the calming, sleep-appropriate palette
+        // recommended by the ui-ux-pro-max skill (Sleep Tracker preset).
+        // Token names kept for stability; values retuned. Orange (pink token)
+        // is reserved as the single warm accent for the hero + primary CTA.
         aurora: {
-          purple: "#7c5cff", // indigo-violet bridge
-          violet: "#9d7bff", // soft indigo accent (text)
-          indigo: "#3b82f6", // blue
-          pink: "#ff7a18", // PRIMARY WARM (orange) — replaces pink
+          purple: "#6366f1", // indigo (secondary)
+          violet: "#8b7dff", // soft indigo-violet accent (text)
+          indigo: "#4338ca", // deep indigo (primary)
+          pink: "#7c3aed", // dream violet (accent) — calming, replaces orange
           cyan: "#38bdf8", // azure accent
           teal: "#2dd4bf", // success/positive accent
         },
@@ -27,9 +29,9 @@ export default {
       },
       backgroundImage: {
         "aurora-gradient":
-          "linear-gradient(135deg, #ff7a18 0%, #7c5cff 52%, #38bdf8 100%)",
+          "linear-gradient(135deg, #4338ca 0%, #7c3aed 52%, #38bdf8 100%)",
         "night-radial":
-          "radial-gradient(ellipse at top, #171a3a 0%, #080a16 45%, #04050d 100%)",
+          "radial-gradient(ellipse at top, #1e2350 0%, #0f172a 45%, #0b0f1f 100%)",
       },
       keyframes: {
         float: {
@@ -52,8 +54,8 @@ export default {
           "100%": { transform: "translateX(100%)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 30px -5px rgba(59,130,246,0.5)" },
-          "50%": { boxShadow: "0 0 55px 5px rgba(255,122,24,0.55)" },
+          "0%, 100%": { boxShadow: "0 0 30px -5px rgba(67,56,202,0.5)" },
+          "50%": { boxShadow: "0 0 55px 5px rgba(124,58,237,0.55)" },
         },
         marquee: {
           "0%": { transform: "translateX(0)" },
