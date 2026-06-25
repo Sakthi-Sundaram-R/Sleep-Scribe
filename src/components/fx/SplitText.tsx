@@ -6,12 +6,14 @@ import type { ReactNode } from "react";
 export default function SplitText({
   text,
   gradient = [],
+  gradientClass = "text-gradient",
   className,
   delay = 0,
   as: Tag = "h2",
 }: {
   text: string;
   gradient?: string[];
+  gradientClass?: string;
   className?: string;
   delay?: number;
   as?: keyof JSX.IntrinsicElements;
@@ -44,7 +46,7 @@ export default function SplitText({
               },
             }}
           >
-            <span className={isGradient ? "text-gradient" : undefined}>{w}</span>
+            <span className={isGradient ? gradientClass : undefined}>{w}</span>
             {i < words.length - 1 ? " " : null}
           </motion.span>
         );
