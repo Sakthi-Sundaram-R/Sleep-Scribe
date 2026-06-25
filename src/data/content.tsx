@@ -110,7 +110,7 @@ export type Plan = {
 export const plans: Plan[] = [
   {
     name: "Dreamer",
-    price: "$0",
+    price: "₹0",
     period: "/forever",
     tagline: "Everything you need to start journaling tonight.",
     features: [
@@ -123,7 +123,7 @@ export const plans: Plan[] = [
   },
   {
     name: "Lucid",
-    price: "$8",
+    price: "₹649",
     period: "/month",
     tagline: "For people serious about understanding their sleep.",
     features: [
@@ -139,7 +139,7 @@ export const plans: Plan[] = [
   },
   {
     name: "Oracle",
-    price: "$16",
+    price: "₹1,299",
     period: "/month",
     tagline: "Deep insight, coaching and priority intelligence.",
     features: [
