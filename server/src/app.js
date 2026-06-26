@@ -19,6 +19,22 @@ const origins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
 app.use(cors({ origin: origins, credentials: true }));
 app.use(express.json({ limit: "1mb" }));
 
+// Health check — runs BEFORE the DB gate so it can report the real DB status
+// (and the exact connection error) instead of a generic 500.
+app.get("/api/health", async (_req, res) => {
+  try {
+    await connectDB();
+    res.json({ ok: true, db: "connected", service: "sleep-scribe-api" });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      db: "error",
+      message: err?.message || String(err),
+      hasMongoUri: Boolean(process.env.MONGODB_URI),
+    });
+  }
+});
+
 // Ensure the DB is connected before any route runs. connectDB() is cached, so
 // this is a no-op once a (warm) connection exists — the right pattern for
 // serverless, where there's no long-lived boot step.
@@ -30,11 +46,6 @@ app.use(async (_req, _res, next) => {
     next(err);
   }
 });
-
-// Health check
-app.get("/api/health", (_req, res) =>
-  res.json({ ok: true, service: "sleep-scribe-api" })
-);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/entries", entryRoutes);
