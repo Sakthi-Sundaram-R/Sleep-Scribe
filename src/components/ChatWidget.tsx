@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Loader2, Moon } from "lucide-react";
-import { api } from "../lib/api";
+import { api, getToken } from "../lib/api";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -11,16 +11,33 @@ const GREETING: Msg = {
     "Hi, I'm Luna 🌙 — your SleepScribe guide. Ask me about your dreams, better sleep, or how to use the app.",
 };
 
+// When signed in, Luna can read your own journal — greet + prompt accordingly.
+const GREETING_PERSONAL: Msg = {
+  role: "assistant",
+  content:
+    "Hi, I'm Luna 🌙 — and I can read your dream journal. Ask me about your patterns, recurring symbols, or what your dreams have been telling you.",
+};
+
 const QUICK = [
   "What does dreaming of water mean?",
   "How do I journal a dream?",
   "Tips to fall asleep faster",
 ];
 
+const QUICK_PERSONAL = [
+  "What symbols keep recurring in my dreams?",
+  "How has my dream mood changed lately?",
+  "What patterns do you notice in my journal?",
+];
+
 // Floating AI assistant — a small chat box pinned to the bottom-right corner.
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([GREETING]);
+  // Signed-in users get journal-grounded answers; visitors get the public guide.
+  const [personal] = useState(() => Boolean(getToken()));
+  const greeting = personal ? GREETING_PERSONAL : GREETING;
+  const quick = personal ? QUICK_PERSONAL : QUICK;
+  const [messages, setMessages] = useState<Msg[]>([greeting]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -37,9 +54,10 @@ export default function ChatWidget() {
     setInput("");
     setLoading(true);
     try {
-      const { reply } = await api.assistantChat(
-        next.filter((m) => m !== GREETING) // don't echo the canned greeting to the model
-      );
+      const history = next.filter((m) => m !== greeting); // don't echo the canned greeting to the model
+      const { reply } = personal
+        ? await api.journalChat(history)
+        : await api.assistantChat(history);
       setMessages((m) => [...m, { role: "assistant", content: reply }]);
     } catch {
       setMessages((m) => [
@@ -69,7 +87,9 @@ export default function ChatWidget() {
               </span>
               <div className="flex-1">
                 <p className="text-sm font-semibold leading-tight text-white">Luna</p>
-                <p className="text-[11px] text-aurora-teal">● SleepScribe assistant</p>
+                <p className="text-[11px] text-aurora-teal">
+                  ● {personal ? "reading your journal" : "SleepScribe assistant"}
+                </p>
               </div>
               <button
                 onClick={() => setOpen(false)}
@@ -97,7 +117,7 @@ export default function ChatWidget() {
 
               {messages.length === 1 && (
                 <div className="space-y-1.5 pt-1">
-                  {QUICK.map((q) => (
+                  {quick.map((q) => (
                     <button
                       key={q}
                       onClick={() => send(q)}

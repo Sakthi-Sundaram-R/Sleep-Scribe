@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Bell, Moon, Shield, Trash2, Download, LogOut } from "lucide-react";
+import { Bell, Moon, Shield, Trash2, Download, LogOut, Mail } from "lucide-react";
 import { useEntries, clearEntriesCache } from "./useEntries";
 import { useAuth } from "../auth/AuthContext";
+import { api } from "../lib/api";
 import {
   getReminderPrefs,
   saveReminderPrefs,
@@ -37,16 +38,29 @@ function Toggle({
 
 export default function SettingsPage() {
   const { entries, remove } = useEntries();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const [toggles, setToggles] = useState({
     soundscapes: true,
-    weeklyReport: true,
     voiceJournaling: false,
   });
 
   const set = (k: keyof typeof toggles) => (v: boolean) =>
     setToggles((t) => ({ ...t, [k]: v }));
+
+  // Weekly AI report email — a real, persisted preference (server-backed).
+  const weeklyEmailOn = !user?.weeklyEmailOptOut;
+  const [emailMsg, setEmailMsg] = useState("");
+  const toggleWeeklyEmail = async (on: boolean) => {
+    setEmailMsg("");
+    updateUser({ weeklyEmailOptOut: !on }); // optimistic
+    try {
+      await api.updatePreferences({ weeklyEmailOptOut: !on });
+    } catch {
+      updateUser({ weeklyEmailOptOut: on }); // revert on failure
+      setEmailMsg("Couldn't save that — please try again.");
+    }
+  };
 
   // Real nightly reminder (browser notifications + chosen time).
   const [reminder, setReminder] = useState(getReminderPrefs());
@@ -100,7 +114,6 @@ export default function SettingsPage() {
 
   const prefs = [
     { key: "soundscapes" as const, icon: Moon, title: "Adaptive soundscapes", desc: "Play generative sleep sounds at night." },
-    { key: "weeklyReport" as const, icon: User, title: "Weekly AI report", desc: "Get a summary of your sleep every Sunday." },
     { key: "voiceJournaling" as const, icon: Shield, title: "Voice journaling", desc: "Record dreams by voice with transcription." },
   ];
 
@@ -162,6 +175,25 @@ export default function SettingsPage() {
             <p className="mt-2 pl-14 text-[11px] text-white/30">
               Works while SleepScribe is open in a tab.
             </p>
+          </div>
+
+          {/* Weekly AI report email — real, server-persisted preference */}
+          <div className="py-4">
+            <div className="flex items-center gap-4">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/5">
+                <Mail className="h-5 w-5 text-aurora-violet" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">Weekly AI report email</p>
+                <p className="text-xs text-white/45">
+                  A summary of your week in dreams, emailed every Sunday.
+                </p>
+              </div>
+              <Toggle on={weeklyEmailOn} onChange={toggleWeeklyEmail} />
+            </div>
+            {emailMsg && (
+              <p className="mt-2 pl-14 text-xs text-aurora-pink">{emailMsg}</p>
+            )}
           </div>
 
           {prefs.map((p) => {

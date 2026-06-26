@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String },
     googleId: { type: String, index: true, sparse: true },
     avatar: { type: String },
+    // Weekly "sleep coach" digest email — opt-out (default: receive it).
+    weeklyEmailOptOut: { type: Boolean, default: false },
     // Password reset (hashed token + expiry).
     resetTokenHash: { type: String },
     resetTokenExp: { type: Date },
@@ -28,6 +30,7 @@ userSchema.methods.toJSON = function () {
     name: this.name,
     email: this.email,
     avatar: this.avatar,
+    weeklyEmailOptOut: Boolean(this.weeklyEmailOptOut),
     createdAt: this.createdAt,
   };
 };

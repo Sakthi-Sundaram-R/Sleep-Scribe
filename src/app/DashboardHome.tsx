@@ -8,9 +8,16 @@ import {
   Moon,
   ArrowRight,
   Sparkles,
+  Home,
 } from "lucide-react";
 import { useEntries } from "./useEntries";
-import { computeStreak, journaledToday } from "./dreamStats";
+import {
+  computeStreak,
+  journaledToday,
+  sleepHoursWeekDelta,
+  qualityMonthDelta,
+  formatDelta,
+} from "./dreamStats";
 
 export default function DashboardHome() {
   const { entries } = useEntries();
@@ -27,11 +34,21 @@ export default function DashboardHome() {
   const streak = computeStreak(entries);
   const loggedToday = journaledToday(entries);
 
+  // Real period-over-period deltas (null until there's prior data to compare).
+  const hoursDelta = sleepHoursWeekDelta(entries);
+  const qualityDelta = qualityMonthDelta(entries);
+
   const week = [...entries].slice(0, 7).reverse();
   const top = entries[0];
 
   const cards = [
-    { icon: Clock, label: "Avg. sleep", value: `${avgHours}h`, sub: "+18m vs last week", color: "text-aurora-cyan" },
+    {
+      icon: Clock,
+      label: "Avg. sleep",
+      value: `${avgHours}h`,
+      sub: hoursDelta == null ? "All time avg." : `${formatDelta(hoursDelta, "m")} vs last week`,
+      color: "text-aurora-cyan",
+    },
     {
       icon: Flame,
       label: "Journal streak",
@@ -39,7 +56,13 @@ export default function DashboardHome() {
       sub: streak > 0 ? (loggedToday ? "Logged today 🔥" : "Log today to keep it") : "Start one tonight",
       color: "text-aurora-pink",
     },
-    { icon: TrendingUp, label: "Sleep score", value: `${avgScore}`, sub: "+12 this month", color: "text-aurora-teal" },
+    {
+      icon: TrendingUp,
+      label: "Sleep score",
+      value: `${avgScore}`,
+      sub: qualityDelta == null ? "All time avg." : `${formatDelta(qualityDelta)} this month`,
+      color: "text-aurora-teal",
+    },
     { icon: NotebookPen, label: "Entries", value: `${entries.length}`, sub: "All time", color: "text-aurora-violet" },
   ];
 
@@ -50,9 +73,14 @@ export default function DashboardHome() {
           <p className="text-sm text-white/50">Good morning ☀️</p>
           <h1 className="font-display text-3xl font-bold">Your sleep at a glance</h1>
         </div>
-        <Link to="/app/journal" className="btn-aurora text-sm">
-          <NotebookPen className="h-4 w-4" /> New entry
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/" className="btn-ghost text-sm">
+            <Home className="h-4 w-4" /> Return to home
+          </Link>
+          <Link to="/app/journal" className="btn-aurora text-sm">
+            <NotebookPen className="h-4 w-4" /> New entry
+          </Link>
+        </div>
       </div>
 
       {/* Nudge: not journaled today */}

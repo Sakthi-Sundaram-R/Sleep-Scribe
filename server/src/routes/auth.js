@@ -188,4 +188,22 @@ router.get("/me", requireAuth, async (req, res) => {
   res.json({ user });
 });
 
+// PATCH /api/auth/preferences — update the current user's preferences.
+// Body: { weeklyEmailOptOut?: boolean }.
+router.patch("/preferences", requireAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (typeof req.body?.weeklyEmailOptOut === "boolean") {
+      user.weeklyEmailOptOut = req.body.weeklyEmailOptOut;
+    }
+    await user.save();
+    res.json({ user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not update preferences" });
+  }
+});
+
 export default router;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useScroll, useMotionValueEvent, useTransform, motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import ScrollTextOverlay from "../3d/ScrollTextOverlay";
-import { prefersReducedMotion } from "../3d/util";
+import { prefersReducedMotion, isMobile } from "../3d/util";
 
 // ---------------------------------------------------------------------------
 // Frame-sequence scroll. 261 WebP frames (public/frames) are scrubbed by scroll
@@ -200,9 +200,11 @@ export default function FrameScroll() {
     <section
       ref={sectionRef}
       className="relative"
-      style={{ height: reduced ? "100vh" : "600vh" }}
+      // Shorter scrub on phones so the cinematic intro isn't six screen-heights
+      // of scrolling before the page content begins.
+      style={{ height: reduced ? "100vh" : isMobile ? "320vh" : "600vh" }}
     >
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#060912]">
+      <div className="sticky top-0 h-[100svh] w-full overflow-hidden bg-[#060912]">
         <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
         {/* Soft cinematic grade so text reads cleanly over the footage. */}

@@ -176,6 +176,68 @@ export async function assistantChat(history) {
   }
 }
 
+const JOURNAL_SYSTEM = `You are Luna, this user's personal SleepScribe dream companion.
+Below is a digest of THIS user's own dream journal. Answer their questions using
+their real dreams — reference specific entries, dates, recurring symbols, moods
+and patterns you can actually see in the digest.
+
+- Warm, concrete, concise (2-5 sentences). Quote or paraphrase their dreams when relevant.
+- Ground every claim in the digest. If it doesn't contain the answer, say so
+  honestly — never invent dreams, dates or symbols they didn't log.
+- Spot patterns across entries (recurring symbols, mood shifts, sleep vs dream tone).
+- Never give medical or psychological diagnoses; for serious or persistent
+  concerns, gently suggest speaking to a professional.`;
+
+// Compress a user's entries into a compact, token-friendly journal digest the
+// model can reason over. Newest first, capped so the prompt stays small.
+function summarizeJournal(entries) {
+  const list = (Array.isArray(entries) ? entries : []).slice(0, 50);
+  if (!list.length) return "(The user's journal is empty — they haven't logged any dreams yet.)";
+  return list
+    .map((e, i) => {
+      const a = e.analysis || {};
+      const mood = a.mood?.label || "—";
+      const syms = (a.symbols || []).map((s) => s.name).filter(Boolean).join(", ") || "—";
+      const themes = (a.themes || []).join(", ");
+      const gist = a.summary || String(e.text || "").slice(0, 160);
+      return `${i + 1}. [${e.date || "—"}] mood: ${mood} | hours: ${e.hours ?? "—"} | symbols: ${syms}${
+        themes ? ` | themes: ${themes}` : ""
+      }\n   "${String(gist).slice(0, 220)}"`;
+    })
+    .join("\n");
+}
+
+// Journal-aware chat: Luna answers grounded in the user's own entries.
+// `history` is [{role,content}] turns; `entries` is the user's stored dreams.
+export async function journalChat(entries, history) {
+  const turns = (Array.isArray(history) ? history : [])
+    .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
+    .slice(-12)
+    .map((m) => ({ role: m.role, content: String(m.content).slice(0, 1500) }));
+
+  if (!groq) {
+    return "I can't reach my full mind right now — but your journal is always here. Try again in a moment. 🌙";
+  }
+
+  const digest = `The user's dream journal (newest first):\n${summarizeJournal(entries)}`;
+  try {
+    const completion = await groq.chat.completions.create({
+      model: MODEL,
+      temperature: 0.6,
+      max_tokens: 450,
+      messages: [
+        { role: "system", content: JOURNAL_SYSTEM },
+        { role: "system", content: digest },
+        ...turns,
+      ],
+    });
+    return completion.choices?.[0]?.message?.content?.trim() || "…";
+  } catch (err) {
+    console.error("Journal chat failed:", err.message);
+    return "I'm having trouble reading your journal right now — give me a moment and try again. 🌙";
+  }
+}
+
 // Analyze a dream. Uses Groq if a key is configured; otherwise falls back to
 // the offline heuristic so the app always works.
 export async function analyzeDream(text) {

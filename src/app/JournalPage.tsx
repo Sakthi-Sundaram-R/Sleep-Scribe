@@ -5,6 +5,7 @@ import { useEntries, type Entry } from "./useEntries";
 import { filterEntries, moodOptions, type TimeRange } from "./dreamStats";
 import { useSpeechToText } from "./useSpeechToText";
 import ShareDreamButton from "./ShareDreamButton";
+import DreamArtButton from "./DreamArtButton";
 import DreamChat from "./DreamChat";
 import { useAuth } from "../auth/AuthContext";
 
@@ -285,7 +286,10 @@ export default function JournalPage() {
                   </p>
                 </div>
 
-                <ShareDreamButton entry={active} userName={user?.name} />
+                <div className="grid grid-cols-2 gap-3">
+                  <ShareDreamButton entry={active} userName={user?.name} />
+                  <DreamArtButton entry={active} />
+                </div>
 
                 <DreamChat entry={active} />
               </motion.div>

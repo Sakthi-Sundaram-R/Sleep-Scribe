@@ -1,12 +1,17 @@
 import { motion } from "framer-motion";
 import { useMemo } from "react";
-import { Brain, Moon, Sparkles, TrendingUp } from "lucide-react";
+import { Brain, Moon, Sparkles, TrendingUp, FileDown } from "lucide-react";
 import { useEntries } from "./useEntries";
-import { recurringSymbols } from "./dreamStats";
+import { recurringSymbols, consistencyScore } from "./dreamStats";
+import { exportJournalPdf } from "./journalPdf";
+import { useAuth } from "../auth/AuthContext";
 import WeeklyDigest from "./WeeklyDigest";
+import Correlations from "./Correlations";
+import RecurringDreamCard from "./RecurringDreamCard";
 
 export default function InsightsPage() {
   const { entries } = useEntries();
+  const { user } = useAuth();
 
   const { moods, symbols, recentTop, avgHours, consistency } = useMemo(() => {
     const moodMap = new Map<string, { count: number; color: string }>();
@@ -28,7 +33,8 @@ export default function InsightsPage() {
       entries.length > 0
         ? (entries.reduce((s, e) => s + e.hours, 0) / entries.length).toFixed(1)
         : "0";
-    const consistency = Math.min(99, 60 + entries.length * 4);
+    // Real journaling consistency: % of the last 30 days with an entry.
+    const consistency = consistencyScore(entries, 30);
     return { moods, symbols, recentTop, avgHours, consistency };
   }, [entries]);
 
@@ -37,12 +43,23 @@ export default function InsightsPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold">Insights & analytics</h1>
-        <p className="text-sm text-white/50">
-          Patterns the AI found across {entries.length} entries.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-bold">Insights & analytics</h1>
+          <p className="text-sm text-white/50">
+            Patterns the AI found across {entries.length} entries.
+          </p>
+        </div>
+        <button
+          onClick={() => exportJournalPdf(entries, user?.name)}
+          disabled={entries.length === 0}
+          className="btn-ghost text-sm disabled:opacity-50"
+        >
+          <FileDown className="h-4 w-4" /> Export PDF
+        </button>
       </div>
+
+      <RecurringDreamCard />
 
       <WeeklyDigest />
 
@@ -121,6 +138,9 @@ export default function InsightsPage() {
           </p>
         </div>
       </div>
+
+      {/* Sleep ↔ dream correlations */}
+      <Correlations />
 
       {/* Common symbols */}
       <div className="glass rounded-3xl p-6">

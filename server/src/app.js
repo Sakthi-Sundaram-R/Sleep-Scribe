@@ -5,6 +5,7 @@ import { connectDB } from "./db.js";
 import authRoutes from "./routes/auth.js";
 import entryRoutes from "./routes/entries.js";
 import aiRoutes from "./routes/ai.js";
+import cronRoutes from "./routes/cron.js";
 
 // The Express app, with no server bound. Imported by:
 //   - server/src/index.js  → local dev (app.listen on a port)
@@ -55,6 +56,7 @@ app.use(async (req, _res, next) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/entries", entryRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/cron", cronRoutes);
 
 // 404 fallback
 app.use((_req, res) => res.status(404).json({ error: "Not found" }));

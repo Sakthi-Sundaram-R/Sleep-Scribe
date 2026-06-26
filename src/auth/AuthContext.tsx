@@ -13,6 +13,7 @@ type AuthState = {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
+  updateUser: (patch: Partial<ApiUser>) => void;
   logout: () => void;
 };
 
@@ -62,6 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user);
   };
 
+  const updateUser = (patch: Partial<ApiUser>) =>
+    setUser((u) => (u ? { ...u, ...patch } : u));
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -69,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, loginWithGoogle, logout }}
+      value={{ user, loading, login, register, loginWithGoogle, updateUser, logout }}
     >
       {children}
     </AuthContext.Provider>

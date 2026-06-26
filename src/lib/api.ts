@@ -20,6 +20,7 @@ export type ApiUser = {
   name: string;
   email: string;
   avatar?: string;
+  weeklyEmailOptOut?: boolean;
   createdAt: string;
 };
 
@@ -71,6 +72,12 @@ export const api = {
     }),
 
   me: () => request<{ user: ApiUser }>("/auth/me"),
+
+  updatePreferences: (prefs: { weeklyEmailOptOut?: boolean }) =>
+    request<{ user: ApiUser }>("/auth/preferences", {
+      method: "PATCH",
+      body: JSON.stringify(prefs),
+    }),
 
   forgotPassword: (email: string) =>
     request<{ ok: true; message: string }>("/auth/forgot", {
@@ -130,6 +137,14 @@ export const api = {
   // Floating assistant chatbot (public, rate-limited).
   assistantChat: (messages: { role: "user" | "assistant"; content: string }[]) =>
     request<{ reply: string }>("/ai/assistant", {
+      method: "POST",
+      body: JSON.stringify({ messages }),
+    }),
+
+  // "Ask your journal" — Luna answers grounded in the signed-in user's own
+  // dreams (the server pulls the entries; we only send the conversation).
+  journalChat: (messages: { role: "user" | "assistant"; content: string }[]) =>
+    request<{ reply: string }>("/ai/journal", {
       method: "POST",
       body: JSON.stringify({ messages }),
     }),

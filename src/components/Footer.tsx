@@ -23,8 +23,8 @@ export default function Footer() {
   return (
     <footer className="relative border-t border-white/10 pt-16 pb-8">
       <div className="section-pad">
-        <div className="grid gap-10 lg:grid-cols-6">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-2 gap-8 sm:gap-10 lg:grid-cols-6">
+          <div className="col-span-2 lg:col-span-2">
             <div className="flex items-center gap-2.5">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-aurora-gradient">
                 <Moon className="h-5 w-5 text-white" />

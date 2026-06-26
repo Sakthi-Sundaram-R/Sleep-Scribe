@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { Entry } from "../models/Entry.js";
-import { analyzeDream, chatAboutDream, weeklyDigest, assistantChat, aiEnabled } from "../ai/groq.js";
+import { analyzeDream, chatAboutDream, weeklyDigest, assistantChat, journalChat, aiEnabled } from "../ai/groq.js";
 
 const router = Router();
 
@@ -91,6 +91,21 @@ router.post("/chat", requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Chat failed" });
+  }
+});
+
+// POST /api/ai/journal — "Ask your journal": Luna answers grounded in the
+// current user's own stored dreams (authenticated). Body: { messages }.
+router.post("/journal", requireAuth, async (req, res) => {
+  try {
+    const entries = await Entry.find({ userId: req.userId })
+      .sort({ createdAt: -1 })
+      .limit(60);
+    const reply = await journalChat(entries, req.body?.messages);
+    res.json({ reply });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Journal chat failed" });
   }
 });
 
