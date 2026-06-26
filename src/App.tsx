@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import RequireAuth from "./auth/RequireAuth";
-import AuroraBackground from "./components/fx/AuroraBackground";
+import VideoBackground from "./components/fx/VideoBackground";
 import StarBackground from "./components/StarBackground";
 import CursorGlow from "./components/fx/CursorGlow";
 import ScrollProgress from "./components/fx/ScrollProgress";
@@ -22,7 +22,7 @@ export default function App() {
   return (
     <AuthProvider>
       <SmoothScroll>
-        <AuroraBackground />
+        <VideoBackground />
         <StarBackground />
         <CursorGlow />
         <GrainOverlay />
