@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NotebookPen, Wand2, Loader2, Trash2, Sparkles, Moon, Search, X } from "lucide-react";
+import { NotebookPen, Wand2, Loader2, Trash2, Sparkles, Moon, Search, X, Mic } from "lucide-react";
 import { useEntries, type Entry } from "./useEntries";
 import { filterEntries, moodOptions, type TimeRange } from "./dreamStats";
+import { useSpeechToText } from "./useSpeechToText";
 import ShareDreamButton from "./ShareDreamButton";
+import DreamChat from "./DreamChat";
 
 export default function JournalPage() {
   const { entries, add, remove } = useEntries();
@@ -27,6 +29,13 @@ export default function JournalPage() {
   }, [entries, active]);
 
   const [err, setErr] = useState("");
+
+  // Voice journaling
+  const { supported: voiceSupported, listening, start, stop } = useSpeechToText();
+  const toggleVoice = () => {
+    if (listening) stop();
+    else start((t) => setText((cur) => (cur ? `${cur.trim()} ` : "") + t.trim()));
+  };
 
   const save = async () => {
     if (!text.trim()) return;
@@ -56,10 +65,25 @@ export default function JournalPage() {
         {/* Composer + list */}
         <div className="space-y-6">
           <div className="glass rounded-3xl p-6">
-            <h2 className="font-display text-lg font-semibold">
-              <NotebookPen className="mr-1 inline h-5 w-5 text-aurora-pink" />
-              New entry
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg font-semibold">
+                <NotebookPen className="mr-1 inline h-5 w-5 text-aurora-pink" />
+                New entry
+              </h2>
+              {voiceSupported && (
+                <button
+                  onClick={toggleVoice}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    listening
+                      ? "animate-pulse border-aurora-pink/50 bg-aurora-pink/15 text-aurora-pink"
+                      : "border-white/10 bg-white/5 text-white/70 hover:text-white"
+                  }`}
+                >
+                  <Mic className="h-3.5 w-3.5" />
+                  {listening ? "Listening…" : "Speak"}
+                </button>
+              )}
+            </div>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -260,6 +284,8 @@ export default function JournalPage() {
                 </div>
 
                 <ShareDreamButton entry={active} />
+
+                <DreamChat entry={active} />
               </motion.div>
             ) : (
               <motion.div

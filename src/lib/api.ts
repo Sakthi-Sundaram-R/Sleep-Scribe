@@ -101,6 +101,20 @@ export const api = {
 
   aiStatus: () => request<{ aiEnabled: boolean; model: string }>("/ai/status"),
 
+  // Multi-turn follow-up chat about a specific dream.
+  chatAboutDream: (body: {
+    dreamText: string;
+    summary: string;
+    messages: { role: "user" | "assistant"; content: string }[];
+  }) =>
+    request<{ reply: string }>("/ai/chat", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  // Weekly AI "sleep coach" digest over the last 7 days.
+  weeklyDigest: () => request<{ digest: string; count: number }>("/ai/digest"),
+
   deleteEntry: (id: string) =>
     request<{ ok: true }>(`/entries/${id}`, { method: "DELETE" }),
 };

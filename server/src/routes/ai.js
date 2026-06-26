@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
-import { analyzeDream, aiEnabled } from "../ai/groq.js";
+import { Entry } from "../models/Entry.js";
+import { analyzeDream, chatAboutDream, weeklyDigest, aiEnabled } from "../ai/groq.js";
 
 const router = Router();
 
@@ -70,6 +71,43 @@ router.post("/demo", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Analysis failed" });
+  }
+});
+
+// POST /api/ai/chat — multi-turn follow-up chat about a dream (authenticated).
+// Body: { dreamText, summary, messages: [{role, content}] }. Returns { reply }.
+router.post("/chat", requireAuth, async (req, res) => {
+  const { dreamText, summary, messages } = req.body || {};
+  if (!dreamText || !String(dreamText).trim()) {
+    return res.status(400).json({ error: "Dream context is required" });
+  }
+  try {
+    const reply = await chatAboutDream(
+      String(dreamText).slice(0, 4000),
+      String(summary || "").slice(0, 2000),
+      messages
+    );
+    res.json({ reply });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Chat failed" });
+  }
+});
+
+// GET /api/ai/digest — a weekly "sleep coach" report over the last 7 days.
+router.get("/digest", requireAuth, async (req, res) => {
+  try {
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const entries = await Entry.find({
+      userId: req.userId,
+      createdAt: { $gte: since },
+    }).sort({ createdAt: -1 });
+
+    const digest = await weeklyDigest(entries);
+    res.json({ digest, count: entries.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not build digest" });
   }
 });
 

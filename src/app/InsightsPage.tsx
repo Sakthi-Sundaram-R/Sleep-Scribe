@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { Brain, Moon, Sparkles, TrendingUp } from "lucide-react";
 import { useEntries } from "./useEntries";
 import { recurringSymbols } from "./dreamStats";
+import WeeklyDigest from "./WeeklyDigest";
 
 export default function InsightsPage() {
   const { entries } = useEntries();
@@ -42,6 +43,8 @@ export default function InsightsPage() {
           Patterns the AI found across {entries.length} entries.
         </p>
       </div>
+
+      <WeeklyDigest />
 
       {/* Headline metrics */}
       <div className="grid gap-4 sm:grid-cols-3">
