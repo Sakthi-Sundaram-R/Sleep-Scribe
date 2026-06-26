@@ -127,6 +127,13 @@ export const api = {
   // Weekly AI "sleep coach" digest over the last 7 days.
   weeklyDigest: () => request<{ digest: string; count: number }>("/ai/digest"),
 
+  // Floating assistant chatbot (public, rate-limited).
+  assistantChat: (messages: { role: "user" | "assistant"; content: string }[]) =>
+    request<{ reply: string }>("/ai/assistant", {
+      method: "POST",
+      body: JSON.stringify({ messages }),
+    }),
+
   deleteEntry: (id: string) =>
     request<{ ok: true }>(`/entries/${id}`, { method: "DELETE" }),
 };

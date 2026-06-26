@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { Entry } from "../models/Entry.js";
-import { analyzeDream, chatAboutDream, weeklyDigest, aiEnabled } from "../ai/groq.js";
+import { analyzeDream, chatAboutDream, weeklyDigest, assistantChat, aiEnabled } from "../ai/groq.js";
 
 const router = Router();
 
@@ -108,6 +108,28 @@ router.get("/digest", requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not build digest" });
+  }
+});
+
+// POST /api/ai/assistant — public, rate-limited chatbot (Luna).
+// Body: { messages: [{role, content}] }. Returns { reply }.
+router.post("/assistant", async (req, res) => {
+  const ip = (
+    req.headers["x-forwarded-for"]?.toString().split(",")[0] ||
+    req.ip ||
+    "unknown"
+  ).trim();
+  if (demoRateLimited(ip)) {
+    return res
+      .status(429)
+      .json({ reply: "We've chatted a lot just now — give me a few minutes to recharge. 🌙" });
+  }
+  try {
+    const reply = await assistantChat(req.body?.messages);
+    res.json({ reply });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Assistant failed" });
   }
 });
 

@@ -138,6 +138,44 @@ export async function weeklyDigest(entries) {
   }
 }
 
+const ASSISTANT_SYSTEM = `You are Luna, SleepScribe's friendly in-app assistant.
+SleepScribe is an AI sleep journal & dream-analysis app: users record dreams (by
+text or voice), the AI decodes symbols/mood/themes, and they get insights,
+recurring-symbol tracking, streaks and a weekly report.
+
+Help users with:
+- questions about sleep, dreams and dream meanings (gently, never superstitious),
+- how to use SleepScribe's features,
+- light, supportive sleep-hygiene tips.
+
+Style: warm, encouraging, concise (2-4 sentences). Never give medical or
+psychological diagnoses — for serious or persistent issues, kindly suggest
+speaking to a doctor. Stay on topic (sleep, dreams, the app).`;
+
+// General-purpose assistant chatbot. `history` is [{role,content}] turns.
+export async function assistantChat(history) {
+  const turns = (Array.isArray(history) ? history : [])
+    .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
+    .slice(-12)
+    .map((m) => ({ role: m.role, content: String(m.content).slice(0, 1500) }));
+
+  if (!groq) {
+    return "I'm resting for a moment and can't reach my full brain — but I'm here. Try asking again shortly, or explore your journal in the meantime. 🌙";
+  }
+  try {
+    const completion = await groq.chat.completions.create({
+      model: MODEL,
+      temperature: 0.7,
+      max_tokens: 350,
+      messages: [{ role: "system", content: ASSISTANT_SYSTEM }, ...turns],
+    });
+    return completion.choices?.[0]?.message?.content?.trim() || "…";
+  } catch (err) {
+    console.error("Assistant chat failed:", err.message);
+    return "I'm having trouble thinking clearly right now — give me a moment and try again. 🌙";
+  }
+}
+
 // Analyze a dream. Uses Groq if a key is configured; otherwise falls back to
 // the offline heuristic so the app always works.
 export async function analyzeDream(text) {
