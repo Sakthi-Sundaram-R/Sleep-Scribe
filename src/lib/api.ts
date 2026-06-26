@@ -72,6 +72,18 @@ export const api = {
 
   me: () => request<{ user: ApiUser }>("/auth/me"),
 
+  forgotPassword: (email: string) =>
+    request<{ ok: true; message: string }>("/auth/forgot", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (body: { email: string; token: string; password: string }) =>
+    request<{ token: string; user: ApiUser }>("/auth/reset", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
   listEntries: () => request<{ entries: ApiEntry[] }>("/entries"),
 
   addEntry: (body: {

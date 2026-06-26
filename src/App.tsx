@@ -10,6 +10,8 @@ import SmoothScroll from "./components/fx/SmoothScroll";
 import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AppLayout from "./app/AppLayout";
 import DashboardHome from "./app/DashboardHome";
 import JournalPage from "./app/JournalPage";
@@ -29,6 +31,8 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot" element={<ForgotPassword />} />
+          <Route path="/reset" element={<ResetPassword />} />
           <Route
             path="/app"
             element={

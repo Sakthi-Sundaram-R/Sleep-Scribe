@@ -1,10 +1,14 @@
 import { Router } from "express";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
 import { User } from "../models/User.js";
 import { requireAuth, signToken } from "../middleware/auth.js";
+import { sendEmail } from "../mail.js";
 
 const router = Router();
+
+const sha256 = (s) => crypto.createHash("sha256").update(s).digest("hex");
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
@@ -110,6 +114,70 @@ router.post("/google", async (req, res) => {
   } catch (err) {
     console.error("Google auth failed:", err.message);
     res.status(401).json({ error: "Google sign-in failed" });
+  }
+});
+
+// POST /api/auth/forgot — start a password reset. Always returns 200 so the
+// endpoint can't be used to discover which emails have accounts.
+router.post("/forgot", async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (user && user.passwordHash) {
+      const token = crypto.randomBytes(32).toString("hex");
+      user.resetTokenHash = sha256(token);
+      user.resetTokenExp = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      await user.save();
+
+      const origin = (process.env.CLIENT_ORIGIN || "http://localhost:5173").split(",")[0].trim();
+      const link = `${origin}/reset?token=${token}&email=${encodeURIComponent(user.email)}`;
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your SleepScribe password",
+        text: `Reset your password (link valid for 1 hour):\n${link}`,
+        html: `<p>Tap to reset your SleepScribe password (valid for 1 hour):</p><p><a href="${link}">${link}</a></p><p>If you didn't request this, you can ignore this email.</p>`,
+      });
+    }
+
+    res.json({ ok: true, message: "If that email has an account, a reset link is on its way." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not start password reset" });
+  }
+});
+
+// POST /api/auth/reset — complete a password reset with a valid token.
+router.post("/reset", async (req, res) => {
+  try {
+    const { email, token, password } = req.body || {};
+    if (!email || !token || !password) {
+      return res.status(400).json({ error: "Email, token and new password are required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
+    }
+
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      resetTokenHash: sha256(token),
+      resetTokenExp: { $gt: new Date() },
+    });
+    if (!user) {
+      return res.status(400).json({ error: "This reset link is invalid or has expired." });
+    }
+
+    user.passwordHash = await bcrypt.hash(password, 10);
+    user.resetTokenHash = undefined;
+    user.resetTokenExp = undefined;
+    await user.save();
+
+    const authToken = signToken(user._id);
+    res.json({ token: authToken, user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not reset password" });
   }
 });
 

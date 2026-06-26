@@ -144,6 +144,14 @@ export default function Login() {
               required
             />
 
+            {mode === "login" && (
+              <div className="-mt-1 text-right">
+                <Link to="/forgot" className="text-xs text-white/50 hover:text-white">
+                  Forgot password?
+                </Link>
+              </div>
+            )}
+
             {error && (
               <p className="rounded-xl border border-aurora-pink/30 bg-aurora-pink/10 px-3 py-2 text-sm text-aurora-pink">
                 {error}

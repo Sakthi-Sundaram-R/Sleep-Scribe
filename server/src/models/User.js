@@ -14,6 +14,9 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String },
     googleId: { type: String, index: true, sparse: true },
     avatar: { type: String },
+    // Password reset (hashed token + expiry).
+    resetTokenHash: { type: String },
+    resetTokenExp: { type: Date },
   },
   { timestamps: true }
 );
