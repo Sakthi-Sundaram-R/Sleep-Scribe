@@ -12,7 +12,7 @@ import { prefersReducedMotion } from "../3d/util";
 // buttery-smooth cinematic intro.
 // ---------------------------------------------------------------------------
 
-const FRAME_COUNT = 131;
+const FRAME_COUNT = 240;
 const framePath = (i: number) =>
   `/frames/frame-${String(i + 1).padStart(3, "0")}.webp`;
 
@@ -106,17 +106,24 @@ export default function FrameScroll() {
       if (count === FRAME_COUNT) setReady(true);
     };
 
+    // Each frame counts exactly once, whichever signal lands first. onload is
+    // attached BEFORE src so a frame is never missed even if decode() rejects
+    // after the image has already loaded.
+    const done = new Array(FRAME_COUNT).fill(false);
+    const finish = (i: number) => {
+      if (done[i]) return;
+      done[i] = true;
+      markLoaded(i);
+    };
+
     for (let i = 0; i < FRAME_COUNT; i++) {
       const img = new Image();
       img.decoding = "async";
+      img.onload = () => finish(i);
+      img.onerror = () => finish(i);
       img.src = framePath(i);
-      // Prefer decode() (resolves once pixels are decoded); fall back to onload.
-      img
-        .decode()
-        .then(() => markLoaded(i))
-        .catch(() => {
-          img.onload = img.onerror = () => markLoaded(i);
-        });
+      // decode() warms the bitmap for stutter-free scrubbing; harmless if it rejects.
+      img.decode().then(() => finish(i)).catch(() => {});
       imgs[i] = img;
     }
     imagesRef.current = imgs;
