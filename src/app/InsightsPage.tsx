@@ -2,38 +2,33 @@ import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { Brain, Moon, Sparkles, TrendingUp } from "lucide-react";
 import { useEntries } from "./useEntries";
+import { recurringSymbols } from "./dreamStats";
 
 export default function InsightsPage() {
   const { entries } = useEntries();
 
-  const { moods, symbols, avgHours, consistency } = useMemo(() => {
+  const { moods, symbols, recentTop, avgHours, consistency } = useMemo(() => {
     const moodMap = new Map<string, { count: number; color: string }>();
-    const symbolMap = new Map<string, number>();
     entries.forEach((e) => {
       const m = e.analysis.mood;
       const cur = moodMap.get(m.label) ?? { count: 0, color: m.color };
       moodMap.set(m.label, { count: cur.count + 1, color: m.color });
-      e.analysis.symbols.forEach((s) =>
-        symbolMap.set(s.name, (symbolMap.get(s.name) ?? 0) + 1)
-      );
     });
     const total = entries.length || 1;
     const moods = [...moodMap.entries()]
       .map(([label, v]) => ({ label, pct: Math.round((v.count / total) * 100), color: v.color }))
       .sort((a, b) => b.pct - a.pct);
-    const symbols = [...symbolMap.entries()]
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6);
+
+    const symbols = recurringSymbols(entries).slice(0, 6);
+    // Top recurring symbol in the last 30 days (the "killer" headline).
+    const recentTop = recurringSymbols(entries, 30).filter((s) => s.count >= 2)[0] ?? null;
+
     const avgHours =
       entries.length > 0
         ? (entries.reduce((s, e) => s + e.hours, 0) / entries.length).toFixed(1)
         : "0";
-    const consistency = Math.min(
-      99,
-      60 + entries.length * 4
-    );
-    return { moods, symbols, avgHours, consistency };
+    const consistency = Math.min(99, 60 + entries.length * 4);
+    return { moods, symbols, recentTop, avgHours, consistency };
   }, [entries]);
 
   const hoursTrend = [...entries].slice(0, 10).reverse();
@@ -129,9 +124,23 @@ export default function InsightsPage() {
         <div className="mb-5 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-aurora-pink" />
           <h2 className="font-display text-lg font-semibold">
-            Your most common dream symbols
+            Recurring dream symbols
           </h2>
         </div>
+
+        {recentTop && (
+          <div className="mb-5 rounded-2xl border border-aurora-purple/25 bg-aurora-purple/10 px-4 py-3 text-sm text-white/85">
+            <span className="font-semibold text-aurora-violet">{recentTop.name}</span>{" "}
+            keeps returning — it appeared in{" "}
+            <span className="font-semibold">{recentTop.count} dreams</span> this month.
+          </div>
+        )}
+
+        {symbols.length === 0 && (
+          <p className="text-sm text-white/40">
+            Symbols the AI spots in your dreams will collect here over time.
+          </p>
+        )}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {symbols.map((s, i) => (
             <motion.div

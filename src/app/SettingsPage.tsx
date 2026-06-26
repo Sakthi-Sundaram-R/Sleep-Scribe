@@ -4,6 +4,11 @@ import { motion } from "framer-motion";
 import { User, Bell, Moon, Shield, Trash2, Download, LogOut } from "lucide-react";
 import { useEntries, clearEntriesCache } from "./useEntries";
 import { useAuth } from "../auth/AuthContext";
+import {
+  getReminderPrefs,
+  saveReminderPrefs,
+  requestNotificationPermission,
+} from "./useNightlyReminder";
 
 function Toggle({
   on,
@@ -35,7 +40,6 @@ export default function SettingsPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [toggles, setToggles] = useState({
-    reminders: true,
     soundscapes: true,
     weeklyReport: true,
     voiceJournaling: false,
@@ -43,6 +47,32 @@ export default function SettingsPage() {
 
   const set = (k: keyof typeof toggles) => (v: boolean) =>
     setToggles((t) => ({ ...t, [k]: v }));
+
+  // Real nightly reminder (browser notifications + chosen time).
+  const [reminder, setReminder] = useState(getReminderPrefs());
+  const [reminderMsg, setReminderMsg] = useState("");
+
+  const toggleReminder = async (on: boolean) => {
+    setReminderMsg("");
+    if (on) {
+      const ok = await requestNotificationPermission();
+      if (!ok) {
+        setReminderMsg(
+          "Allow notifications in your browser to turn on reminders."
+        );
+        return;
+      }
+    }
+    const next = { ...reminder, enabled: on };
+    setReminder(next);
+    saveReminderPrefs(next);
+  };
+
+  const setReminderTime = (time: string) => {
+    const next = { ...reminder, time };
+    setReminder(next);
+    saveReminderPrefs(next);
+  };
 
   const exportData = () => {
     const blob = new Blob([JSON.stringify(entries, null, 2)], {
@@ -69,7 +99,6 @@ export default function SettingsPage() {
   };
 
   const prefs = [
-    { key: "reminders" as const, icon: Bell, title: "Bedtime reminders", desc: "A gentle nudge to journal before sleep." },
     { key: "soundscapes" as const, icon: Moon, title: "Adaptive soundscapes", desc: "Play generative sleep sounds at night." },
     { key: "weeklyReport" as const, icon: User, title: "Weekly AI report", desc: "Get a summary of your sleep every Sunday." },
     { key: "voiceJournaling" as const, icon: Shield, title: "Voice journaling", desc: "Record dreams by voice with transcription." },
@@ -102,6 +131,39 @@ export default function SettingsPage() {
       <div className="glass rounded-3xl p-6">
         <h2 className="mb-4 font-display text-lg font-semibold">Preferences</h2>
         <div className="divide-y divide-white/10">
+          {/* Nightly reminder — real browser notification */}
+          <div className="py-4 first:pt-0">
+            <div className="flex items-center gap-4">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/5">
+                <Bell className="h-5 w-5 text-aurora-violet" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">Nightly reminder</p>
+                <p className="text-xs text-white/45">
+                  A browser nudge to journal if you haven't logged a dream that day.
+                </p>
+              </div>
+              <Toggle on={reminder.enabled} onChange={toggleReminder} />
+            </div>
+            {reminder.enabled && (
+              <div className="mt-3 flex items-center gap-3 pl-14">
+                <span className="text-xs text-white/50">Remind me at</span>
+                <input
+                  type="time"
+                  value={reminder.time}
+                  onChange={(e) => setReminderTime(e.target.value)}
+                  className="rounded-lg border border-white/10 bg-night-950/60 px-3 py-1.5 text-sm text-white/80 outline-none focus:border-aurora-purple/60"
+                />
+              </div>
+            )}
+            {reminderMsg && (
+              <p className="mt-2 pl-14 text-xs text-aurora-pink">{reminderMsg}</p>
+            )}
+            <p className="mt-2 pl-14 text-[11px] text-white/30">
+              Works while SleepScribe is open in a tab.
+            </p>
+          </div>
+
           {prefs.map((p) => {
             const Icon = p.icon;
             return (

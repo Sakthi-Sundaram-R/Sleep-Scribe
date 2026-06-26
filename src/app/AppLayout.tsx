@@ -13,7 +13,8 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
-import { clearEntriesCache } from "./useEntries";
+import { clearEntriesCache, useEntries } from "./useEntries";
+import { useNightlyReminder } from "./useNightlyReminder";
 
 const nav = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -63,6 +64,8 @@ export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { entries } = useEntries();
+  useNightlyReminder(entries);
 
   const handleLogout = () => {
     logout();

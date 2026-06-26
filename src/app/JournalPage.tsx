@@ -1,13 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NotebookPen, Wand2, Loader2, Trash2, Sparkles, Moon } from "lucide-react";
+import { NotebookPen, Wand2, Loader2, Trash2, Sparkles, Moon, Search, X } from "lucide-react";
 import { useEntries, type Entry } from "./useEntries";
+import { filterEntries, moodOptions, type TimeRange } from "./dreamStats";
+import ShareDreamButton from "./ShareDreamButton";
 
 export default function JournalPage() {
   const { entries, add, remove } = useEntries();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState<Entry | null>(null);
+
+  // Search & filters
+  const [query, setQuery] = useState("");
+  const [mood, setMood] = useState("all");
+  const [range, setRange] = useState<TimeRange>("all");
+  const moods = useMemo(() => moodOptions(entries), [entries]);
+  const filtered = useMemo(
+    () => filterEntries(entries, { query, mood, range }),
+    [entries, query, mood, range]
+  );
+  const filtering = query.trim() !== "" || mood !== "all" || range !== "all";
 
   useEffect(() => {
     if (!active && entries.length) setActive(entries[0]);
@@ -77,14 +90,70 @@ export default function JournalPage() {
           </div>
 
           <div className="glass rounded-3xl p-6">
-            <h2 className="mb-4 font-display text-lg font-semibold">
-              Entries{" "}
-              <span className="text-sm font-normal text-white/40">
-                ({entries.length})
-              </span>
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-lg font-semibold">
+                Entries{" "}
+                <span className="text-sm font-normal text-white/40">
+                  ({filtering ? `${filtered.length}/${entries.length}` : entries.length})
+                </span>
+              </h2>
+            </div>
+
+            {/* Search + filters */}
+            <div className="mb-4 space-y-2.5">
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-night-950/60 px-3 focus-within:border-aurora-purple/60">
+                <Search className="h-4 w-4 shrink-0 text-white/40" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search dreams, symbols, themes…"
+                  className="w-full bg-transparent py-2.5 text-sm outline-none placeholder:text-white/30"
+                />
+                {query && (
+                  <button
+                    onClick={() => setQuery("")}
+                    className="shrink-0 text-white/40 hover:text-white"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <select
+                  value={mood}
+                  onChange={(e) => setMood(e.target.value)}
+                  className="flex-1 rounded-xl border border-white/10 bg-night-950/60 px-3 py-2 text-sm text-white/80 outline-none focus:border-aurora-purple/60"
+                >
+                  <option value="all">All moods</option>
+                  {moods.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={range}
+                  onChange={(e) => setRange(e.target.value as TimeRange)}
+                  className="flex-1 rounded-xl border border-white/10 bg-night-950/60 px-3 py-2 text-sm text-white/80 outline-none focus:border-aurora-purple/60"
+                >
+                  <option value="all">Any time</option>
+                  <option value="today">Today</option>
+                  <option value="week">Past week</option>
+                  <option value="month">Past month</option>
+                </select>
+              </div>
+            </div>
+
             <div className="space-y-2">
-              {entries.map((e) => (
+              {filtered.length === 0 && (
+                <p className="py-6 text-center text-sm text-white/40">
+                  {entries.length === 0
+                    ? "No entries yet — write your first dream above."
+                    : "No dreams match your filters."}
+                </p>
+              )}
+              {filtered.map((e) => (
                 <button
                   key={e.id}
                   onClick={() => setActive(e)}
@@ -189,6 +258,8 @@ export default function JournalPage() {
                     {active.analysis.tip}
                   </p>
                 </div>
+
+                <ShareDreamButton entry={active} />
               </motion.div>
             ) : (
               <motion.div

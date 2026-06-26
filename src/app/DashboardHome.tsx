@@ -10,6 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useEntries } from "./useEntries";
+import { computeStreak, journaledToday } from "./dreamStats";
 
 export default function DashboardHome() {
   const { entries } = useEntries();
@@ -23,12 +24,21 @@ export default function DashboardHome() {
       ? Math.round(entries.reduce((s, e) => s + e.quality, 0) / entries.length)
       : 0;
 
+  const streak = computeStreak(entries);
+  const loggedToday = journaledToday(entries);
+
   const week = [...entries].slice(0, 7).reverse();
   const top = entries[0];
 
   const cards = [
     { icon: Clock, label: "Avg. sleep", value: `${avgHours}h`, sub: "+18m vs last week", color: "text-aurora-cyan" },
-    { icon: Flame, label: "Journal streak", value: `${entries.length} days`, sub: "Keep it going 🔥", color: "text-aurora-pink" },
+    {
+      icon: Flame,
+      label: "Journal streak",
+      value: `${streak} ${streak === 1 ? "day" : "days"}`,
+      sub: streak > 0 ? (loggedToday ? "Logged today 🔥" : "Log today to keep it") : "Start one tonight",
+      color: "text-aurora-pink",
+    },
     { icon: TrendingUp, label: "Sleep score", value: `${avgScore}`, sub: "+12 this month", color: "text-aurora-teal" },
     { icon: NotebookPen, label: "Entries", value: `${entries.length}`, sub: "All time", color: "text-aurora-violet" },
   ];
@@ -44,6 +54,28 @@ export default function DashboardHome() {
           <NotebookPen className="h-4 w-4" /> New entry
         </Link>
       </div>
+
+      {/* Nudge: not journaled today */}
+      {!loggedToday && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap items-center gap-3 rounded-2xl border border-aurora-pink/25 bg-aurora-pink/10 px-5 py-3.5"
+        >
+          <Flame className="h-5 w-5 shrink-0 text-aurora-pink" />
+          <p className="flex-1 text-sm text-white/85">
+            {streak > 0
+              ? `You're on a ${streak}-${streak === 1 ? "day" : "day"} streak — log tonight's dream to keep it alive.`
+              : "You haven't logged a dream today. Capture it before it fades."}
+          </p>
+          <Link
+            to="/app/journal"
+            className="shrink-0 rounded-full bg-aurora-pink/20 px-4 py-1.5 text-sm font-semibold text-aurora-pink transition hover:bg-aurora-pink/30"
+          >
+            Log now
+          </Link>
+        </motion.div>
+      )}
 
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
