@@ -6,10 +6,8 @@ import SplitText from "./fx/SplitText";
 export default function Features() {
   return (
     <section id="features" className="relative py-28">
-      {/* Transparent — the global dreamscape video shows through here. A soft
-          scrim just keeps the heading + cards readable over brighter frames. */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#080a1d]/40 via-transparent to-[#080a1d]/40" />
-
+      {/* Fully transparent — the global dreamscape video shows through, matching
+          every other section (no extra scrim, so there's no visible seam). */}
       <div className="section-pad relative z-10">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="pill mb-4">Everything in one place</span>
