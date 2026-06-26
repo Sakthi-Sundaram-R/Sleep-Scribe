@@ -6,9 +6,11 @@ import { filterEntries, moodOptions, type TimeRange } from "./dreamStats";
 import { useSpeechToText } from "./useSpeechToText";
 import ShareDreamButton from "./ShareDreamButton";
 import DreamChat from "./DreamChat";
+import { useAuth } from "../auth/AuthContext";
 
 export default function JournalPage() {
   const { entries, add, remove } = useEntries();
+  const { user } = useAuth();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState<Entry | null>(null);
@@ -283,7 +285,7 @@ export default function JournalPage() {
                   </p>
                 </div>
 
-                <ShareDreamButton entry={active} />
+                <ShareDreamButton entry={active} userName={user?.name} />
 
                 <DreamChat entry={active} />
               </motion.div>

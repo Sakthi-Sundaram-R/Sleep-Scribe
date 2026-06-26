@@ -9,6 +9,7 @@ import {
 import { api } from "../lib/api";
 import Reveal from "./Reveal";
 import SplitText from "./fx/SplitText";
+import ShareDreamButton from "../app/ShareDreamButton";
 
 export default function DreamAnalyzer() {
   const [text, setText] = useState("");
@@ -217,6 +218,18 @@ export default function DreamAnalyzer() {
                       </p>
                       <p className="mt-1 text-sm text-white/80">{result.tip}</p>
                     </div>
+
+                    <ShareDreamButton
+                      entry={{
+                        text,
+                        date: new Date().toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        }),
+                        analysis: result,
+                      }}
+                      label="Share my dream card"
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>

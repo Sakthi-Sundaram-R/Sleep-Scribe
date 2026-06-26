@@ -1,18 +1,25 @@
 import { useState } from "react";
 import { Share2, Loader2, Check } from "lucide-react";
-import type { Entry } from "./useEntries";
-import { renderDreamCard } from "./dreamCard";
+import { renderDreamCard, type DreamCardInput } from "./dreamCard";
 
 // Builds a shareable PNG of the dream analysis and either opens the native
 // share sheet (with the image attached) or downloads it.
-export default function ShareDreamButton({ entry }: { entry: Entry }) {
+export default function ShareDreamButton({
+  entry,
+  userName,
+  label = "Share this dream",
+}: {
+  entry: DreamCardInput;
+  userName?: string;
+  label?: string;
+}) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
   const share = async () => {
     setBusy(true);
     try {
-      const blob = await renderDreamCard(entry);
+      const blob = await renderDreamCard(entry, { userName });
       const file = new File([blob], "sleepscribe-dream.png", {
         type: "image/png",
       });
@@ -61,7 +68,7 @@ export default function ShareDreamButton({ entry }: { entry: Entry }) {
         </>
       ) : (
         <>
-          <Share2 className="h-4 w-4" /> Share this dream
+          <Share2 className="h-4 w-4" /> {label}
         </>
       )}
     </button>

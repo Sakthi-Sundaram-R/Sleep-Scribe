@@ -1,8 +1,14 @@
-import type { Entry } from "./useEntries";
+import type { DreamAnalysis } from "../lib/dreamEngine";
 
 // Renders a shareable, story-sized (1080×1350) PNG of a dream analysis on a
-// canvas — gradient backdrop, interpretation, mood and top symbols, branded.
-// No external deps; uses the web fonts already loaded by the page.
+// canvas — a vibrant aurora-themed backdrop, the interpretation, mood, top
+// symbols, and the dreamer's name. No external deps; uses the page's web fonts.
+
+export type DreamCardInput = {
+  text: string;
+  date?: string;
+  analysis: DreamAnalysis;
+};
 
 function wrap(
   ctx: CanvasRenderingContext2D,
@@ -42,8 +48,10 @@ function roundRect(
   ctx.closePath();
 }
 
-export async function renderDreamCard(entry: Entry): Promise<Blob> {
-  // Make sure the brand fonts are ready so the canvas doesn't fall back to serif.
+export async function renderDreamCard(
+  entry: DreamCardInput,
+  opts?: { userName?: string }
+): Promise<Blob> {
   try {
     await (document as Document & { fonts?: FontFaceSet }).fonts?.ready;
   } catch {
@@ -57,12 +65,13 @@ export async function renderDreamCard(entry: Entry): Promise<Blob> {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
+  const accent = entry.analysis?.mood?.color || "#8b7dff";
 
-  // backdrop
+  // ---- Vibrant aurora backdrop ----
   const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, "#0b0f1f");
-  bg.addColorStop(0.5, "#160f2e");
-  bg.addColorStop(1, "#0a0712");
+  bg.addColorStop(0, "#1b1550");
+  bg.addColorStop(0.5, "#2a1a5e");
+  bg.addColorStop(1, "#100c2e");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
@@ -73,100 +82,121 @@ export async function renderDreamCard(entry: Entry): Promise<Blob> {
     ctx.fillStyle = rg;
     ctx.fillRect(0, 0, W, H);
   };
-  glow(250, 240, 460, "rgba(124,58,237,0.40)");
-  glow(900, 1180, 520, "rgba(56,189,248,0.16)");
-  const accent = entry.analysis?.mood?.color || "#7c5cff";
-  glow(880, 360, 360, `${accent}55`);
+  glow(170, 200, 540, "rgba(99,102,241,0.55)"); // indigo  – top-left
+  glow(940, 250, 480, "rgba(56,189,248,0.42)"); // cyan    – top-right
+  glow(160, 1150, 540, "rgba(124,58,237,0.48)"); // violet  – bottom-left
+  glow(960, 1180, 500, "rgba(236,72,153,0.32)"); // pink    – bottom-right
+  glow(880, 380, 340, `${accent}66`); // mood accent
+
+  // top accent strip (brand gradient)
+  const strip = ctx.createLinearGradient(0, 0, W, 0);
+  strip.addColorStop(0, "#6366f1");
+  strip.addColorStop(0.5, "#a78bfa");
+  strip.addColorStop(1, "#38bdf8");
+  ctx.fillStyle = strip;
+  ctx.fillRect(0, 0, W, 12);
 
   // stars
-  ctx.fillStyle = "rgba(255,255,255,0.55)";
-  for (let i = 0; i < 60; i++) {
-    const x = Math.random() * W;
-    const y = Math.random() * H;
-    const s = Math.random() * 1.8 + 0.4;
+  for (let i = 0; i < 70; i++) {
+    ctx.fillStyle = i % 3 === 0 ? "#a5b4fc" : "#ffffff";
     ctx.globalAlpha = Math.random() * 0.6 + 0.2;
     ctx.beginPath();
-    ctx.arc(x, y, s, 0, Math.PI * 2);
+    ctx.arc(Math.random() * W, Math.random() * H, Math.random() * 1.8 + 0.4, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
 
-  // brand
-  ctx.fillStyle = "#c7b9ff";
-  ctx.font = "600 36px Inter, system-ui, sans-serif";
-  ctx.fillText("✦  SleepScribe", PAD, 130);
+  // ---- Brand (gradient text) ----
+  const brand = ctx.createLinearGradient(PAD, 0, PAD + 380, 0);
+  brand.addColorStop(0, "#a5b4fc");
+  brand.addColorStop(1, "#67e8f9");
+  ctx.fillStyle = brand;
+  ctx.font = "700 40px Inter, system-ui, sans-serif";
+  ctx.fillText("✦  SleepScribe", PAD, 145);
 
   // date (right)
-  ctx.fillStyle = "rgba(255,255,255,0.45)";
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
   ctx.font = "500 30px 'JetBrains Mono', monospace";
   ctx.textAlign = "right";
-  ctx.fillText(entry.date || "", W - PAD, 130);
+  ctx.fillText(entry.date || "", W - PAD, 145);
   ctx.textAlign = "left";
 
-  // eyebrow
-  ctx.fillStyle = accent;
-  ctx.font = "700 26px Inter, system-ui, sans-serif";
-  ctx.fillText("DREAM INTERPRETATION", PAD, 290);
+  // eyebrow — personalized with the dreamer's name
+  const name = opts?.userName?.trim();
+  ctx.fillStyle = "#c4b5fd";
+  ctx.font = "800 28px Inter, system-ui, sans-serif";
+  ctx.fillText(
+    (name ? `${name}'s dream`.toUpperCase() : "DREAM INTERPRETATION"),
+    PAD,
+    300
+  );
 
   // summary (large serif)
-  ctx.fillStyle = "#f3f1ff";
-  ctx.font = "500 62px 'Cormorant Garamond', Georgia, serif";
+  ctx.fillStyle = "#f4f1ff";
+  ctx.font = "500 64px 'Cormorant Garamond', Georgia, serif";
   const summary = entry.analysis?.summary || entry.text;
   const lines = wrap(ctx, summary, W - PAD * 2).slice(0, 7);
-  let y = 360;
+  let y = 380;
   for (const ln of lines) {
     ctx.fillText(ln, PAD, y);
-    y += 76;
+    y += 78;
   }
 
   // mood row
-  y += 30;
-  ctx.fillStyle = "rgba(255,255,255,0.5)";
-  ctx.font = "600 26px Inter, system-ui, sans-serif";
+  y += 34;
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.font = "700 26px Inter, system-ui, sans-serif";
   ctx.fillText("MOOD", PAD, y);
   ctx.fillStyle = accent;
-  ctx.font = "700 30px Inter, system-ui, sans-serif";
+  ctx.font = "800 30px Inter, system-ui, sans-serif";
   ctx.textAlign = "right";
   ctx.fillText((entry.analysis?.mood?.label || "—").toUpperCase(), W - PAD, y);
   ctx.textAlign = "left";
-  // mood bar
-  y += 26;
+  // mood bar (gradient fill)
+  y += 28;
   const barW = W - PAD * 2;
-  ctx.fillStyle = "rgba(255,255,255,0.12)";
-  roundRect(ctx, PAD, y, barW, 14, 7);
+  ctx.fillStyle = "rgba(255,255,255,0.14)";
+  roundRect(ctx, PAD, y, barW, 16, 8);
   ctx.fill();
   const score = Math.max(0, Math.min(100, entry.analysis?.mood?.score ?? 50));
-  ctx.fillStyle = accent;
-  roundRect(ctx, PAD, y, (barW * score) / 100, 14, 7);
+  const moodGrad = ctx.createLinearGradient(PAD, 0, PAD + barW, 0);
+  moodGrad.addColorStop(0, accent);
+  moodGrad.addColorStop(1, "#a78bfa");
+  ctx.fillStyle = moodGrad;
+  roundRect(ctx, PAD, y, (barW * score) / 100, 16, 8);
   ctx.fill();
 
   // symbols
-  y += 90;
-  ctx.fillStyle = "rgba(255,255,255,0.5)";
-  ctx.font = "600 26px Inter, system-ui, sans-serif";
+  y += 96;
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.font = "700 26px Inter, system-ui, sans-serif";
   ctx.fillText("KEY SYMBOLS", PAD, y);
-  y += 24;
   const symbols = (entry.analysis?.symbols ?? []).slice(0, 3);
-  ctx.font = "600 30px Inter, system-ui, sans-serif";
-  for (const s of symbols) {
-    y += 56;
-    ctx.fillStyle = "#ffffff";
-    const dot = PAD + 8;
+  ctx.font = "600 32px Inter, system-ui, sans-serif";
+  const dotColors = ["#38bdf8", "#a78bfa", "#f472b6"];
+  symbols.forEach((s, i) => {
+    y += 60;
+    ctx.fillStyle = dotColors[i % dotColors.length];
     ctx.beginPath();
-    ctx.arc(dot, y - 10, 6, 0, Math.PI * 2);
-    ctx.fillStyle = accent;
+    ctx.arc(PAD + 8, y - 11, 7, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#e7e4ff";
-    ctx.fillText(s.name, PAD + 34, y);
-  }
+    ctx.fillStyle = "#eceaff";
+    ctx.fillText(s.name, PAD + 36, y);
+  });
 
   // footer
-  ctx.fillStyle = "rgba(255,255,255,0.4)";
-  ctx.font = "500 26px Inter, system-ui, sans-serif";
-  ctx.fillText("Decoded with SleepScribe — your AI dream journal", PAD, H - 110);
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.font = "600 26px Inter, system-ui, sans-serif";
+  ctx.fillText(
+    name
+      ? `${name} · decoded with SleepScribe`
+      : "Decoded with SleepScribe — your AI dream journal",
+    PAD,
+    H - 112
+  );
+  ctx.fillStyle = "rgba(255,255,255,0.3)";
   ctx.font = "400 22px Inter, system-ui, sans-serif";
-  ctx.fillText("For personal reflection — not medical advice.", PAD, H - 72);
+  ctx.fillText("For personal reflection — not medical advice.", PAD, H - 74);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
