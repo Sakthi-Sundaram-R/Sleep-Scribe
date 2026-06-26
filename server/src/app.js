@@ -35,10 +35,15 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
-// Ensure the DB is connected before any route runs. connectDB() is cached, so
-// this is a no-op once a (warm) connection exists — the right pattern for
+// Public AI endpoints don't touch the database — let them work even if the DB
+// is unavailable (so Luna + the homepage demo never depend on Mongo).
+const NO_DB_PATHS = new Set(["/api/ai/assistant", "/api/ai/demo"]);
+
+// Ensure the DB is connected before DB-backed routes run. connectDB() is cached,
+// so this is a no-op once a (warm) connection exists — the right pattern for
 // serverless, where there's no long-lived boot step.
-app.use(async (_req, _res, next) => {
+app.use(async (req, _res, next) => {
+  if (NO_DB_PATHS.has(req.path)) return next();
   try {
     await connectDB();
     next();
