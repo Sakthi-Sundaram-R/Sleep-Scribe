@@ -101,8 +101,14 @@ export default function ChatWidget() {
             </div>
 
             {/* messages — min-h-0 lets this flex child shrink so it scrolls
-                instead of pushing the input out of the fixed-height card. */}
-            <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4">
+                instead of pushing the input out of the fixed-height card.
+                data-lenis-prevent stops Lenis smooth-scroll from hijacking the
+                wheel/touch gesture so this list scrolls natively. */}
+            <div
+              ref={scrollRef}
+              data-lenis-prevent
+              className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4"
+            >
               {messages.map((m, i) => (
                 <div
                   key={i}
