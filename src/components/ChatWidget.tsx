@@ -100,8 +100,9 @@ export default function ChatWidget() {
               </button>
             </div>
 
-            {/* messages */}
-            <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+            {/* messages — min-h-0 lets this flex child shrink so it scrolls
+                instead of pushing the input out of the fixed-height card. */}
+            <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4">
               {messages.map((m, i) => (
                 <div
                   key={i}
