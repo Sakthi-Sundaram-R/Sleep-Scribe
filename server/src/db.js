@@ -1,4 +1,22 @@
 import mongoose from "mongoose";
+import dns from "node:dns";
+
+// `mongodb+srv://` requires an SRV DNS lookup, which some local resolvers
+// (certain Wi-Fi / VPN / hotspot networks) refuse with "querySrv ECONNREFUSED".
+// If the system resolver can't answer the SRV query, fall back to public DNS so
+// the Atlas connection still works. Production resolvers handle SRV fine, so
+// this only kicks in when the default lookup actually fails.
+async function ensureSrvResolvable(uri) {
+  if (!uri?.startsWith("mongodb+srv://")) return;
+  const host = uri.split("@")[1]?.split(/[/?]/)[0];
+  if (!host) return;
+  try {
+    await dns.promises.resolveSrv(`_mongodb._tcp.${host}`);
+  } catch {
+    dns.setServers(["8.8.8.8", "1.1.1.1"]);
+    console.warn("⚠  System DNS can't resolve the Atlas SRV record — using public DNS (8.8.8.8).");
+  }
+}
 
 // Cache the connection across invocations. In serverless (Vercel) the module is
 // reused between warm requests, so we must not open a new connection each time —
@@ -33,6 +51,7 @@ export async function connectDB() {
       }
 
       mongoose.set("strictQuery", true);
+      await ensureSrvResolvable(uri);
       await mongoose.connect(uri, { dbName: "sleepscribe" });
       console.log("✓ MongoDB connected");
       return mongoose.connection;
