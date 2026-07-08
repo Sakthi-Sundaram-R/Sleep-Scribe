@@ -16,9 +16,11 @@ const FRAME_COUNT = 240;
 const framePath = (i: number) =>
   `/frames/frame-${String(i + 1).padStart(3, "0")}.webp`;
 
-// How aggressively the drawn frame chases the scroll target (0..1 per tick).
-// Lower = smoother / more "weight", higher = snappier.
-const EASE = 0.12;
+// How aggressively the drawn frame chases the scroll target, in 1/seconds.
+// Lenis already smooths the scroll itself, so the chase can be fairly snappy —
+// a low value here stacks a second easing on top and the footage visibly lags
+// the wheel. Higher = tighter tracking, lower = more trailing "weight".
+const CHASE_SPEED = 14;
 
 export default function FrameScroll() {
   const reduced = prefersReducedMotion();
@@ -156,13 +158,19 @@ export default function FrameScroll() {
       return () => clearInterval(id);
     }
 
-    const tick = () => {
+    let lastTime = 0;
+    const tick = (time: number) => {
+      // Time-based exponential chase so the feel is identical at 60Hz and 144Hz.
+      const dt = lastTime ? Math.min((time - lastTime) / 1000, 1 / 30) : 1 / 60;
+      lastTime = time;
+      const alpha = 1 - Math.exp(-CHASE_SPEED * dt);
+
       const target = targetProgress.current * (FRAME_COUNT - 1);
       const cur = currentFrame.current;
       const dist = Math.abs(target - cur);
       // Snap when very close so the loop can settle and let the page go idle.
       const settled = dist < 0.01;
-      const next = settled ? target : cur + (target - cur) * EASE;
+      const next = settled ? target : cur + (target - cur) * alpha;
       currentFrame.current = next;
 
       const index = Math.min(FRAME_COUNT - 1, Math.max(0, Math.round(next)));
@@ -173,6 +181,7 @@ export default function FrameScroll() {
 
       if (settled) {
         running.current = false; // stop until the next scroll wakes us
+        lastTime = 0; // next kick starts with a fresh dt
         return;
       }
       rafRef.current = requestAnimationFrame(tick);

@@ -5,7 +5,9 @@ import Lenis from "lenis";
 export default function SmoothScroll({ children }: { children: ReactNode }) {
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.15,
+      // Short enough that the page doesn't feel like it trails the wheel,
+      // long enough to keep the weighted, cinematic glide.
+      duration: 0.95,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
     });
